@@ -341,4 +341,60 @@ describe('Q1 summary mode on the paging pack', () => {
       expect(result.raw).toMatch(/nextCursor/)
     })
   })
+
+  /*
+   * Q1 counts first (pinned shape). The per-trade counts are the primary answer, so they come
+   * first as a compact section and the samples follow in a separate one:
+   *   { query, total, byTrade: [{ trade, count }], groups: [{ trade, count, sampleJobs, sources }],
+   *     jobs, page, nextCursor, notes }
+   * byTrade has one entry per trade with exactly the keys trade and count, in the order of groups,
+   * on every page (also with a cursor or a trade filter). In the response text, "byTrade" and all
+   * of its counts come before "groups", before the first "sampleJobs" and before "jobs", and end
+   * within the first BY_TRADE_WITHIN_BYTES bytes.
+   */
+  describe('Q1: per-trade counts come first, samples separately', () => {
+    const BY_TRADE_WITHIN_BYTES = 1_500
+
+    function byTradeOf(body: Json): { trade: string; count: number }[] {
+      return arr(body.byTrade, 'byTrade').map((value, i) => {
+        const entry = obj(value, `byTrade[${String(i)}]`)
+        expect(Object.keys(entry).sort(), `byTrade[${String(i)}] keys`).toEqual(['count', 'trade'])
+        return { trade: str(entry.trade, 'trade'), count: num(entry.count, 'count') }
+      })
+    }
+
+    it('Q1: byTrade lists every trade once with its count, in the order of groups, summing to total', async () => {
+      const { body } = await call(ARGS)
+      const byTrade = byTradeOf(body)
+      expect(Object.fromEntries(byTrade.map((e) => [e.trade, e.count]))).toEqual(COUNTS)
+      expect(byTrade.map((e) => e.trade)).toEqual(
+        arr(body.groups, 'groups').map((g) => obj(g, 'group').trade),
+      )
+      expect(byTrade.reduce((sum, e) => sum + e.count, 0)).toBe(TOTAL)
+      expect(body.total).toBe(TOTAL)
+    })
+
+    it('Q1: the counts section precedes groups, every sample and the job list in the response text', async () => {
+      const { call: result } = await call(ARGS)
+      const text = result.raw
+      const at = text.indexOf('"byTrade"')
+      expect(at, 'byTrade present').toBeGreaterThanOrEqual(0)
+      const section = text.indexOf(']', at)
+      expect(section, 'end of byTrade').toBeGreaterThan(at)
+      expect(section).toBeLessThan(text.indexOf('"groups"'))
+      expect(section).toBeLessThan(text.indexOf('"sampleJobs"'))
+      expect(section).toBeLessThan(text.indexOf('"jobs"'))
+      expect(section).toBeLessThan(BY_TRADE_WITHIN_BYTES)
+    })
+
+    it('Q1: every page, also with a trade filter, repeats byTrade for every trade', async () => {
+      const pages = [
+        ...(await allPages({ ...ARGS, limit: 100 })),
+        ...(await allPages({ ...ARGS, trade: 'lawn' })),
+      ]
+      pages.forEach((page) => {
+        expect(Object.fromEntries(byTradeOf(page).map((e) => [e.trade, e.count]))).toEqual(COUNTS)
+      })
+    })
+  })
 })

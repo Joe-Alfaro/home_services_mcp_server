@@ -164,6 +164,22 @@ describe('common checks', () => {
     expect(checkTimeOffsets({ a: '2026-11-02T08:00:00' }).failures).toHaveLength(1)
   })
 
+  it('checks every time field but leaves identifiers exactly as stored (R12 e, D-141)', () => {
+    const icsId = 'evt-123@google.com@2026-10-20T18:15:00Z'
+    const icsSource = { sourceSystem: 'ics', sourceFile: 'a.ics', sourceRecordId: icsId }
+    expect(checkTimeOffsets({ jobs: [{ start: '2026-10-20T18:15:00Z' }] }).failures).toHaveLength(1)
+    expect(
+      checkTimeOffsets({ jobs: [{ start: '2026-10-20T18:15:00Z', sources: [icsSource] }] })
+        .failures,
+    ).toEqual([expect.stringContaining('$.jobs[0].start')])
+    expect(
+      checkTimeOffsets({ jobs: [{ start: '2026-10-20T13:15:00-05:00', sources: [icsSource] }] })
+        .failures,
+    ).toEqual([])
+    expect(checkTimeOffsets({ jobId: icsId, blockIds: [icsId] }).failures).toEqual([])
+    expect(checkTimeOffsets({ reasons: [`blocked by ${icsId}`] }).failures).toHaveLength(1)
+  })
+
   it('flags phone- and email-shaped strings but not IDs or times (R17)', () => {
     expect(checkNoPii({ p: 'call (214) 555-0100' }).failures).toHaveLength(1)
     expect(checkNoPii({ p: '+1 214 555 0100' }).failures).toHaveLength(1)
@@ -194,6 +210,30 @@ describe('common checks', () => {
     )
     expect(checkSources({ openings: [{ start: 'x' }] }).failures).toEqual([])
     expect(checkSources({ name: 'x' }, { entity: true }).failures).toHaveLength(1)
+  })
+
+  it('exempts Q1 byTrade aggregates but still requires sources on samples and jobs (D-142)', () => {
+    const byTrade = [
+      { trade: 'plumbing', count: 3 },
+      { trade: 'hvac', count: 1 },
+    ]
+    const sample = { date: '2026-10-01', trade: 'plumbing', sources: SRC }
+    const ok = {
+      total: 4,
+      byTrade,
+      groups: [{ trade: 'plumbing', count: 3, samples: [sample], sources: SRC }],
+      jobs: [sample],
+    }
+    expect(checkSources(ok).failures).toEqual([])
+    const bareSample = {
+      ...ok,
+      groups: [{ trade: 'plumbing', count: 3, samples: [{ date: '2026-10-01' }], sources: SRC }],
+    }
+    expect(checkSources(bareSample).failures).toEqual([
+      expect.stringContaining('$.groups[0].samples[0]'),
+    ])
+    const bareJob = { ...ok, jobs: [{ date: '2026-10-01' }] }
+    expect(checkSources(bareJob).failures).toEqual([expect.stringContaining('$.jobs[0]')])
   })
 
   it('compares business names ignoring case, punctuation and legal suffixes', () => {

@@ -2,13 +2,22 @@ import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
 import { errorText, ToolInputError } from './errors.ts'
 import { localizeInstants } from './time.ts'
 
-/** Every string in the body with UTC date-times shown in America/Chicago (R12 e). */
+/**
+ * Identifiers keep their exact stored string (R19, D-141): an ICS occurrence ID such as
+ * "<UID>@2026-11-03T18:00:00Z" must join to source_records byte for byte.
+ */
+const ID_KEY = /^(?:id|ids|.+Id|.+Ids)$/
+
+/** Every string in the body with UTC date-times shown in America/Chicago (R12 e), IDs excepted. */
 function localizeTree(value: unknown): unknown {
   if (typeof value === 'string') return localizeInstants(value)
   if (Array.isArray(value)) return value.map(localizeTree)
   if (typeof value === 'object' && value !== null) {
     return Object.fromEntries(
-      Object.entries(value).map(([key, inner]) => [key, localizeTree(inner)]),
+      Object.entries(value).map(([key, inner]) => [
+        key,
+        ID_KEY.test(key) ? inner : localizeTree(inner),
+      ]),
     )
   }
   return value
