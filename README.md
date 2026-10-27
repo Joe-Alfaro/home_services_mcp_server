@@ -5,8 +5,8 @@ several differently shaped provider sources (field-service CRMs, a spreadsheet j
 feeds and provider profiles), normalizes it into one canonical model of providers, properties, jobs
 and availability, and exposes it to AI agents through privacy-aware MCP tools.
 
-Status: under construction. The scaffold, database and migrations are in place; source adapters and
-MCP tools are next.
+Status: under construction. The scaffold, database, migrations and the six source adapters are in
+place; canonical tables, resolution and MCP tools are next.
 
 ## Prerequisites
 
@@ -64,6 +64,15 @@ All times are stored as instants and presented in America/Chicago.
 | `npm run typecheck`        | `tsc --noEmit`.                                                         |
 | `npm run scrub`            | Fail if any forbidden term appears in tracked files, branch or commits. |
 | `npm run check`            | format:check, lint, typecheck, test and scrub. Runs on `git push`.      |
+
+## Ingest
+
+`npm run ingest` runs every adapter in `src/adapters/registry.ts` on the files under
+`$DATA_PACK_DIR/sources/` that match its patterns, stores each candidate record with its provenance
+in `source_records` (and every issue in `ingest_issues`) in one transaction that replaces the
+previous run, and prints a per-source summary: files read, record counts, jobs by kind and status,
+and issues by severity and code. Files no adapter claims are listed. It exits non-zero when any
+`error`-severity issue was raised.
 
 ## Migrations
 

@@ -1,0 +1,86 @@
+{
+  "page": 1,
+  "page_size": 3,
+  "total_pages": 1,
+  "total_items": 2,
+  "estimates": [
+    {
+      "id": "est_00000000000000000000000000000e01",
+      "estimate_number": "3001",
+      "work_status": "complete rated",
+      "customer": {
+        "id": "cus_00000000000000000000000000000c02",
+        "first_name": "Priya",
+        "last_name": "Okonkwo",
+        "email": null,
+        "mobile_number": "(214) 555-0158"
+      },
+      "address": {
+        "id": "adr_00000000000000000000000000000a02",
+        "street": "4533 LIVE OAK ST",
+        "street_line_2": "Apt. 4",
+        "city": null,
+        "state": "TX",
+        "zip": "75204"
+      },
+      "schedule": {
+        "scheduled_start": "2026-10-20T10:00:00",
+        "scheduled_end": "2026-10-20T10:30:00",
+        "arrival_window": 0
+      },
+      "options": [
+        {
+          "id": "opt_00000000000000000000000000000f01",
+          "name": "Option 1",
+          "total_amount": 0,
+          "approval_status": null
+        }
+      ],
+      "description": "leak under sink - estimate",
+      "created_at": "2026-10-15T22:00:00Z",
+      "assigned_employees": [{ "first_name": "Lyle", "last_name": "Crandall" }]
+    },
+    {
+      "id": "est_00000000000000000000000000000e02",
+      "estimate_number": "3002",
+      "work_status": "scheduled",
+      "customer": {
+        "id": "cus_00000000000000000000000000000c01",
+        "first_name": "Theo",
+        "last_name": "Marchetti",
+        "email": "theo.m@example.net",
+        "mobile_number": "972-555-0131"
+      },
+      "address": {
+        "id": "adr_00000000000000000000000000000a01",
+        "street": "5827 Belmont Ave",
+        "street_line_2": null,
+        "city": "Dallas",
+        "state": "TX",
+        "zip": "75206"
+      },
+      "schedule": {
+        "scheduled_start": "2026-11-05T14:00:00",
+        "scheduled_end": "2026-11-05T15:00:00",
+        "arrival_window": 0
+      },
+      "options": [
+        {
+          "id": "opt_00000000000000000000000000000f02",
+          "name": "Option 1",
+          "total_amount": 185000,
+          "approval_status": null
+        },
+        {
+          "id": "opt_00000000000000000000000000000f03",
+          "name": "Option 2",
+          "total_amount": 210000,
+          "approval_status": null
+        }
+      ],
+      "description": "water heater swap - estimate",
+      "created_at": "2026-10-29T22:00:00Z",
+      "assigned_employees": [{ "first_name": "Lyle", "last_name": "Crandall" }]
+    }
+  ]
+}
