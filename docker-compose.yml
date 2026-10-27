@@ -1,0 +1,24 @@
+name: hsmcp
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    # Docker's default bridge: avoids creating a per-project network, which fails on hosts whose
+    # address pools are already used up by other Compose projects.
+    network_mode: bridge
+    environment:
+      POSTGRES_USER: hsmcp
+      POSTGRES_PASSWORD: hsmcp
+      POSTGRES_DB: hsmcp
+    ports:
+      - '127.0.0.1:${HSMCP_DB_PORT:-5434}:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U hsmcp -d hsmcp']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  pgdata:
