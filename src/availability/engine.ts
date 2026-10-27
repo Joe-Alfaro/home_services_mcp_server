@@ -86,6 +86,11 @@ export interface AvailabilityInput {
   minMinutes?: number
   /** Default 60. */
   defaultDurationMinutes?: number
+  /**
+   * From DeclaredHoursCandidate.alwaysOpen: "24/7" is a claim, not a working pattern, so the
+   * declared hours are ignored and hours are inferred from history, at low confidence (G20).
+   */
+  declaredAlwaysOpen?: boolean
 }
 
 /** An interval the engine treats as busy (one per blocking item; end defaulted when missing). */
@@ -189,8 +194,17 @@ export function filterOpenings(
     .sort(byStart)
 }
 
-function blocks(item: BusyItem): boolean {
-  return item.busy && item.startAt !== null && !NON_BLOCKING_STATUSES.has(item.status)
+/**
+ * A completed item still blocks when its slot contains "now": the part after now is the work
+ * running (G25, D-081). Cancelled items never block; a cancelled job leaves nobody on site.
+ */
+function blocks(item: BusyItem, nowMs: number, defaultMinutes: number): boolean {
+  if (!item.busy || item.startAt === null) return false
+  if (!NON_BLOCKING_STATUSES.has(item.status)) return true
+  if (item.status !== 'completed') return false
+  const startMs = Date.parse(item.startAt)
+  const endMs = item.endAt === null ? startMs + defaultMinutes * MINUTE_MS : Date.parse(item.endAt)
+  return startMs < nowMs && endMs > nowMs
 }
 
 function isWork(item: BusyItem): boolean {
@@ -352,14 +366,16 @@ export function computeAvailability(input: AvailabilityInput): AvailabilityResul
   const windowToMs = Date.parse(input.window.to)
   const fromMs = Math.max(windowFromMs, Date.parse(input.now))
 
-  const inferred =
-    input.declaredHours === null ? inferWeeklyHours(input.history, { now: input.now }) : []
-  const hours = input.declaredHours ?? inferred
+  const alwaysOpen = input.declaredAlwaysOpen === true
+  const declaredHours = alwaysOpen ? null : input.declaredHours
+  const inferred = declaredHours === null ? inferWeeklyHours(input.history, { now: input.now }) : []
+  const hours = declaredHours ?? inferred
   const hoursSource =
-    input.declaredHours !== null ? 'declared' : inferred.length > 0 ? 'inferred' : 'none'
+    declaredHours !== null ? 'declared' : inferred.length > 0 ? 'inferred' : 'none'
 
+  const nowMs = Date.parse(input.now)
   const blocking = input.busy.flatMap((item) =>
-    blocks(item) && item.startAt !== null
+    blocks(item, nowMs, defaultMinutes) && item.startAt !== null
       ? [{ item, timed: toTimedBlock(item, item.startAt, defaultMinutes) }]
       : [],
   )
@@ -373,7 +389,12 @@ export function computeAvailability(input: AvailabilityInput): AvailabilityResul
   // Reasons and caps that apply to every opening.
   const globalCaps: { cap: Confidence; reason: string }[] = []
   if (hoursSource === 'inferred') {
-    globalCaps.push({ cap: 'low', reason: 'hours inferred from observed work (none declared)' })
+    globalCaps.push({
+      cap: 'low',
+      reason: alwaysOpen
+        ? 'declared hours are 24/7 (always open), not a working pattern; hours inferred from observed work'
+        : 'hours inferred from observed work (none declared)',
+    })
   }
   if (hoursSource === 'declared') {
     const conflict = outsideHoursReason(hours, input.history, bookedWork)

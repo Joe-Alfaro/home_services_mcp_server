@@ -36,14 +36,16 @@ script banner on stdout, which is the protocol channel.
 
 ## Environment variables
 
-| Variable           | Default                                       | Purpose                                                                 |
-| ------------------ | --------------------------------------------- | ----------------------------------------------------------------------- |
-| `DATABASE_URL`     | `postgres://hsmcp:hsmcp@localhost:5434/hsmcp` | Database the app uses.                                                  |
-| `HSMCP_DB_PORT`    | `5434`                                        | Host port for the Compose Postgres; also used by the default URL.       |
-| `DATA_PACK_DIR`    | `_private/data_pack` (in the repo root)       | Folder holding the source data pack.                                    |
-| `HS_TODAY`         | `2026-11-02`                                  | The service's "today" (YYYY-MM-DD, America/Chicago). Never the clock.   |
-| `HS_NOW`           | midnight of `HS_TODAY`, America/Chicago       | The service's "now". Zone-less values are read as America/Chicago.      |
-| `SCRUB_TERMS_FILE` | `_private/scrub_terms.txt` (in the repo root) | Terms the scrub check forbids in tracked files, branch and commit text. |
+| Variable                | Default                                       | Purpose                                                                 |
+| ----------------------- | --------------------------------------------- | ----------------------------------------------------------------------- |
+| `DATABASE_URL`          | `postgres://hsmcp:hsmcp@localhost:5434/hsmcp` | Database the app uses.                                                  |
+| `HSMCP_DB_PORT`         | `5434`                                        | Host port for the Compose Postgres; also used by the default URL.       |
+| `READER_DATABASE_URL`   | `DATABASE_URL` as `hsmcp_reader`              | Connection `npm start` uses (the read-only role).                       |
+| `HSMCP_READER_PASSWORD` | `hsmcp_reader` (local only)                   | Password for `hsmcp_reader` when `READER_DATABASE_URL` is not set.      |
+| `DATA_PACK_DIR`         | `_private/data_pack` (in the repo root)       | Folder holding the source data pack.                                    |
+| `HS_TODAY`              | `2026-11-02`                                  | The service's "today" (YYYY-MM-DD, America/Chicago). Never the clock.   |
+| `HS_NOW`                | midnight of `HS_TODAY`, America/Chicago       | The service's "now". Zone-less values are read as America/Chicago.      |
+| `SCRUB_TERMS_FILE`      | `_private/scrub_terms.txt` (in the repo root) | Terms the scrub check forbids in tracked files, branch and commit text. |
 
 All times are stored as instants and presented in America/Chicago.
 
@@ -78,8 +80,9 @@ confidence and evidence, and homeowner contacts in their own table). It prints a
 files), the canonical row counts and the link counts by method. It exits non-zero when any
 `error`-severity issue was raised. Running it again leaves the same rows.
 
-The MCP server reads only the `v_*` views (`migrations/0004_read_views.sql`) as the
-`hsmcp_reader` role, which has `SELECT` on those views and nothing else. The views carry no
+The MCP server reads only the `v_*` views (`migrations/0004_read_views.sql` and
+`0005_mcp_views.sql`) as the `hsmcp_reader` role, which has `SELECT` on those views and nothing
+else. The views carry no
 homeowner names, phones, emails, house numbers or units; every row has a `sources` array of
 citations.
 

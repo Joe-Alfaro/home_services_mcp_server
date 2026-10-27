@@ -1,0 +1,85 @@
+{
+  "question": "Has any provider serviced 5823 Belmont Ave, Dallas, TX 75206 before? Who, when, and what was done?",
+  "tool": "get_property_service_history",
+  "derivation": "Derived from the raw data pack by a separate pass that never read the implementation. Matched house number 5823 + Belmont Ave (normalized from several case and suffix spellings) + zip 75206; the CSV rows have no zip, which is inferred because the reference street exists only in 75206. No unit and no estimates at this address. 'Serviced before' = canonical status completed with a start before now (2026-11-02 00:00). The Workiz and Housecall Pro jobs belong to one provider (Lone Star Plumbing, merged on phone). The CSV drywall row appears twice (identical) and counts once. Answer: yes, 5 completed services by 4 distinct businesses across 5 source accounts. A cancelled job and an upcoming job at the same home are labelled, not counted. The job at the same house number on Monticello Ave 75206 must not match (street differs).",
+  "tolerance": "Every 'services' row must be present, matched on provider and local start date (+/-0 days), and must not be labelled cancelled or upcoming. 'labelled' rows may be omitted; when present they must carry the stated status (cancelled = 'cancelled'; upcoming = not completed). Any other item fails (the Monticello Ave job is the known trap). Lone Star listed under two of its names, or the CSV row listed twice, is a minor miss reported as a note. The caller supplied 5823, so that house number may appear; no other may.",
+  "address": { "houseNumber": "5823", "street": "Belmont Ave", "zip": "75206" },
+  "now": "2026-11-02T00:00:00-06:00",
+  "services": [
+    {
+      "provider": "Lone Star Plumbing",
+      "aliases": ["Lone Star Plumbing Co.", "Lone Star Plumbing Co LLC"],
+      "date": "2025-02-18",
+      "time": "09:00",
+      "end": "13:00",
+      "what": "replace water heater - gas 40g",
+      "sourceRecordId": "workiz:FDYR6V8B:4D73RE",
+      "match": "exact"
+    },
+    {
+      "provider": "Frost Bros HVAC",
+      "aliases": [],
+      "date": "2025-07-08",
+      "time": "13:00",
+      "end": "15:00",
+      "what": "capacitor (HVAC repair)",
+      "sourceRecordId": "hcp:job_a3de50d24f219da8cf9ab3345508b558",
+      "match": "exact"
+    },
+    {
+      "provider": "Fresh Nest Cleaning",
+      "aliases": [],
+      "date": "2025-09-15",
+      "time": "09:00",
+      "end": "14:00",
+      "what": "move in/out cleaning",
+      "sourceRecordId": "jobber:Z2lkOi8vSm9iYmVyL0pvYi83MTIzMTEy/visit:Z2lkOi8vSm9iYmVyL1Zpc2l0LzcxMjMxMTI",
+      "match": "exact"
+    },
+    {
+      "provider": "Ray's Fix-It",
+      "aliases": ["Rays Fix It"],
+      "date": "2025-10-03",
+      "time": "10:00",
+      "what": "drywall patch",
+      "sourceRecordId": "csv:rays_fixit_job_log.csv:line88",
+      "duplicateOf": "csv:rays_fixit_job_log.csv:line89",
+      "match": "exact street, zip inferred"
+    },
+    {
+      "provider": "Lone Star Plumbing",
+      "aliases": ["Lone Star Plumbing Co.", "Lone Star Plumbing Co LLC"],
+      "date": "2026-04-14",
+      "time": "08:00",
+      "end": "10:00",
+      "what": "pipe burst",
+      "sourceRecordId": "hcp:job_9825c2fab579f9d37727a5b0e5e3eb10",
+      "match": "exact"
+    }
+  ],
+  "labelled": [
+    {
+      "provider": "M Streets Handyman",
+      "aliases": [],
+      "date": "2026-06-02",
+      "what": "door sticking",
+      "status": "cancelled",
+      "sourceRecordId": "hcp:job_94335f6a0f3204c1140b81905432d16b"
+    },
+    {
+      "provider": "Greenville Ave Plumbing",
+      "aliases": [],
+      "date": "2026-11-11",
+      "what": "new kitchen faucet",
+      "status": "upcoming",
+      "sourceRecordId": "jobber:Z2lkOi8vSm9iYmVyL0pvYi83MTA5Mzc0/visit:Z2lkOi8vSm9iYmVyL1Zpc2l0LzcxMDkzNzQ"
+    }
+  ],
+  "mustNotAppear": [
+    {
+      "provider": "Live Oak Electric",
+      "reason": "same house number on Monticello Ave 75206, a different street",
+      "sourceRecordIdPrefix": "jobber:Z2lkOi8vSm9iYmVyL0pvYi83MTE4NDg5"
+    }
+  ]
+}
