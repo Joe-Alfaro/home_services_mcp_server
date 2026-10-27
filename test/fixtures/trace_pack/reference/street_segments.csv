@@ -1,0 +1,4 @@
+street_name,street_type,city,state,zip,from_number,to_number,start_lat,start_lon,end_lat,end_lon
+Tupelo,Ave,Dallas,TX,75214,1400,1499,32.830000,-96.745000,32.830000,-96.742500
+Tupelo,Ave,Dallas,TX,75214,1500,1599,32.830000,-96.742500,32.830000,-96.740000
+Sorrel,Ln,Dallas,TX,75214,2000,2099,32.860000,-96.745000,32.860000,-96.742500
