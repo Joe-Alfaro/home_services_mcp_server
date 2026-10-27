@@ -1,0 +1,83 @@
+{
+  "question": "What work is already scheduled on the 4500 block of Live Oak St in the next 14 days?",
+  "tool": "get_scheduled_work_on_block",
+  "derivation": "Derived from the raw data pack by a separate pass that never read the implementation. Every CRM, CSV and calendar record was address-normalized (case, suffix spelling, unit) and kept when its house number is 4500-4599 on Live Oak St (75204; no misspelled variants exist on this block). Kept canonical status scheduled or in_progress with a start in [2026-11-02 00:00, 2026-11-16 00:00) America/Chicago; estimates kept and labelled; cancelled items dropped. The CSV fence job appears as two identical rows and counts once; the provider's calendar has an event at the same time with no address and a different job type, so the job is kept at lower confidence. Result: 5 items (4 jobs and 1 estimate).",
+  "tolerance": "Every expected row must be present exactly once, matched on provider and local start date; 'time' is the local start (HH:mm, compared exactly). Row kinds must match: the estimate must be labelled an estimate, jobs must not be. Any other item fails, including the cancelled gutter job and the visits just outside the window listed in mustNotAppear. Items are shown at block level only: no house number may appear, because the caller supplied none.",
+  "window": { "from": "2026-11-02T00:00:00-06:00", "to": "2026-11-16T00:00:00-06:00" },
+  "block": { "street": "Live Oak St", "blockNumber": 4500, "zip": "75204" },
+  "rows": [
+    {
+      "provider": "Ray's Fix-It",
+      "aliases": ["Rays Fix It"],
+      "trade": "handyman",
+      "date": "2026-11-03",
+      "time": "13:00",
+      "what": "fence boards (calendar slot 13:00-15:00 says a different job type)",
+      "kind": "job",
+      "confidence": "low",
+      "sourceRecordIds": [
+        "csv:rays_fixit_job_log.csv:line195",
+        "csv:rays_fixit_job_log.csv:line196",
+        "ics:zmyagdiozlp4n8kjt7gq0jkqlt@google.com"
+      ]
+    },
+    {
+      "provider": "Two Sisters Cleaning",
+      "aliases": [],
+      "trade": "cleaning",
+      "date": "2026-11-04",
+      "time": "10:00",
+      "end": "13:00",
+      "what": "clean (recurring biweekly)",
+      "kind": "job",
+      "sourceRecordIds": [
+        "jobber:Z2lkOi8vSm9iYmVyL0pvYi83MTIxMTMz/visit:Z2lkOi8vSm9iYmVyL1Zpc2l0LzcxMjExMzE"
+      ]
+    },
+    {
+      "provider": "Cool Breeze AC & Heat",
+      "aliases": [],
+      "trade": "hvac",
+      "date": "2026-11-06",
+      "time": "13:00",
+      "end": "15:00",
+      "what": "HVAC maint",
+      "kind": "job",
+      "sourceRecordIds": ["hcp:job_c2c4df66fbd4787ca06181a27baee03d"]
+    },
+    {
+      "provider": "Live Oak Electric",
+      "aliases": [],
+      "trade": "electrical",
+      "date": "2026-11-09",
+      "time": "08:00",
+      "end": "12:00",
+      "what": "Level 2 charger",
+      "kind": "job",
+      "sourceRecordIds": [
+        "jobber:Z2lkOi8vSm9iYmVyL0pvYi83MTE5MDgz/visit:Z2lkOi8vSm9iYmVyL1Zpc2l0LzcxMTkwODM"
+      ]
+    },
+    {
+      "provider": "Big Tex Roofing",
+      "aliases": [],
+      "trade": "roofing",
+      "date": "2026-11-12",
+      "time": "15:00",
+      "end": "16:00",
+      "what": "leak in roof",
+      "kind": "estimate",
+      "sourceRecordIds": ["hcp:est_12fe1849840997f3bb9b3dd17c8983cc"]
+    }
+  ],
+  "mustNotAppear": [
+    {
+      "provider": "Clear Flow Gutters",
+      "date": "2026-11-05",
+      "reason": "cancelled (Workiz Canceled / customer canceled)",
+      "sourceRecordId": "workiz:ILIAU6UL:Y9U2YI"
+    },
+    { "provider": "Two Sisters Cleaning", "date": "2026-11-18", "reason": "outside the window" },
+    { "provider": "Fresh Coat Lakewood", "date": "2026-11-20", "reason": "outside the window" }
+  ]
+}
