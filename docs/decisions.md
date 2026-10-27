@@ -43,6 +43,15 @@ to (naming the better tool), its parameters with units, and an example. Paramete
 5-digit zips and bounded ranges; a bad input names the field and the accepted values. Fewer,
 sharper tools make the agent's first pick the right one.
 
+**Q1 response size: counts first, the job list paged.** The first history tool listed every
+matching job with all its citations, about 946 KB for the benchmark address: correct, but more
+than a live agent can read in one turn. It now answers with per-trade counts and 3 sample jobs
+per trade, plus one page of the job list (10 by default, up to 100, with a `nextCursor`), about
+41 KB by default. The counts answer the question; an agent pages only if it needs the individual
+jobs. Paging is stateless (the cursor is an offset tied to the arguments), so the server keeps no
+session state and a cursor can't page a different query. The eval now fails a default answer
+over 50 KB and pages the full list to check every job ID.
+
 **Eval: a scripted MCP client, no LLM.** `npm run eval` starts the real server over stdio, makes
 one call per benchmark question to the intended tool, and checks the response against expected
 answers that a separate pass derived from the raw data without reading the implementation. Each
@@ -83,8 +92,9 @@ clock, so answers about a fixed snapshot don't drift.
   coordinates and fall out of radius answers. A real geocoder (with a cache) is needed.
 - **Aggregated source views.** The view that builds `sources` arrays for every entity is already
   the slowest query path; at scale citations need to be stored, not aggregated on read.
-- **Response size.** History answers that list every job grow with the data; tools need summaries
-  and paging by default.
+- **Response size.** `search_job_history_near_address` is summarized and paged, but
+  `get_property_service_history` and `get_scheduled_work_on_block` still list every item; a busy
+  home or block will need the same treatment.
 - **The curated trade phrase map.** It covers this data's job titles; thousands of providers bring
   new phrasings that need a maintained map or a reviewed classifier.
 
@@ -98,7 +108,7 @@ clock, so answers about a fixed snapshot don't drift.
 4. **A second, independent availability model** for the eval (see known limits), with exact
    expected opening boundaries.
 5. **Job length from data.** Estimate durations per service from completed jobs instead of fixed
-   defaults, and let callers set a minimum opening length on every openings tool.
+   defaults.
 6. **Fuzzy street matching outside the reference**, so the remaining calendar-mirror splits merge.
 7. **Precomputed free/busy and a spatial index**, the first two scaling fixes above.
 
@@ -119,7 +129,5 @@ clock, so answers about a fixed snapshot don't drift.
 - **Two street-typo mirrors still split.** Street typos are corrected only against the street
   reference, which covers the target zips. Two jobs whose street is misspelled outside that area
   don't merge with the calendar event for the same visit, so each shows as two bookings.
-- **Openings tools have a fixed minimum length** of 30 minutes for profile openings, so a "next 3
-  openings" answer can include a slot too short for real work.
 - **Setup assumes the database exists.** Pointing `DATABASE_URL` at a new database name requires
   creating it first.

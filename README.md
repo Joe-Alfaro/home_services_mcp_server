@@ -69,18 +69,36 @@ If your client has no `cwd` option, use `"args": ["tsx", "/absolute/path/to/home
 
 ## Tools
 
-| Tool                              | Use it for                                                                     |
-| --------------------------------- | ------------------------------------------------------------------------------ |
-| `search_job_history_near_address` | Completed work within a radius of an address, over a period, grouped by trade. |
-| `find_providers`                  | Providers of a trade who worked in a zip and have openings in a window.        |
-| `get_scheduled_work_on_block`     | Upcoming work on one hundred block of a street.                                |
-| `get_provider_profile`            | Everything about one provider: trades, service area, history, next openings.   |
-| `get_property_service_history`    | Who serviced one home, when, and what was done.                                |
-| `rank_providers_for_job`          | A scored, explained ranking of providers for a specific job.                   |
-| `get_provider_openings`           | One provider's openings in a date range, with confidence and reasons.          |
+| Tool                              | Use it for                                                                      |
+| --------------------------------- | ------------------------------------------------------------------------------- |
+| `search_job_history_near_address` | Completed work near an address: per-trade counts, samples and a paged job list. |
+| `find_providers`                  | Providers of a trade who worked in a zip and have openings in a window.         |
+| `get_scheduled_work_on_block`     | Upcoming work on one hundred block of a street.                                 |
+| `get_provider_profile`            | Everything about one provider: trades, service area, history, next openings.    |
+| `get_property_service_history`    | Who serviced one home, when, and what was done.                                 |
+| `rank_providers_for_job`          | A scored, explained ranking of providers for a specific job.                    |
+| `get_provider_openings`           | One provider's openings in a date range, with confidence and reasons.           |
 
 Every response item cites its sources (`sourceSystem`, `sourceFile`, `sourceRecordId`); times are
 ISO strings with the America/Chicago offset.
+
+`search_job_history_near_address` answers with the per-trade counts first (`total`, and `groups`
+with each trade's `count`, 3 sample jobs and their sources), then one page of the job list
+(`jobs`). `limit` sets the page size (1-100, default 10) and the optional `trade` filters the
+list, never the counts. To page, repeat the call with the same arguments plus
+`cursor` = the previous `nextCursor`, until `nextCursor` is `null`:
+
+```text
+first page: { "address": "4512 Live Oak St, Dallas, TX 75204", "radiusMiles": 0.5, "lastMonths": 24 }
+next page:  { "address": "4512 Live Oak St, Dallas, TX 75204", "radiusMiles": 0.5, "lastMonths": 24, "cursor": "<nextCursor>" }
+```
+
+`get_provider_profile` and `get_provider_openings` take `minMinutes`, the shortest opening to
+return (0-720, default 30); `find_providers` takes `minOpeningMinutes` for the same purpose.
+
+A bad argument returns an error naming the field and what it accepts. Any other failure returns a
+generic message naming the tool and saying to retry once; database or driver text never reaches
+the client, only the server's stderr.
 
 ## Eval
 
