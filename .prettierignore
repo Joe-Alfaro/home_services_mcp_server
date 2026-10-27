@@ -2,3 +2,6 @@ node_modules
 dist
 coverage
 package-lock.json
+
+# Untracked private working context; never formatted or linted.
+_private
