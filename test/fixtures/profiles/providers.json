@@ -1,0 +1,79 @@
+{
+  "exported_at": "2026-11-02",
+  "providers": [
+    {
+      "profile_id": "hp_901",
+      "business_name": "Maple Leaf Plumbing Co.",
+      "owner_name": "Dana Whitfield",
+      "phone": "+1 (214) 555-0142",
+      "email": "dana@mapleleafplumbing.example.com",
+      "trades": ["plumbing"],
+      "does_not_do": [],
+      "service_zips": ["75204", "75206"],
+      "hours": "Mon-Fri 8am-5pm, Sat 9am-1pm",
+      "crew_size": 2,
+      "crm": "jobber"
+    },
+    {
+      "profile_id": "hp_902",
+      "business_name": "Tonys Handy Help",
+      "owner_name": "Tony Ferraro",
+      "phone": "214-555-0199",
+      "email": "tony@tonyshandyhelp.example.com",
+      "trades": ["handyman", "painting"],
+      "does_not_do": ["plumbing", "electrical"],
+      "service_zips": ["75204", "75206", "75214"],
+      "hours": "M-F 8-5",
+      "crew_size": 1,
+      "crm": "Google Sheets",
+      "website": "tonyshandyhelp.example.com"
+    },
+    {
+      "profile_id": "hp_903",
+      "business_name": "Bluebonnet Drain Co",
+      "owner_name": "Lyle Crandall",
+      "phone": "(214) 555-0177",
+      "email": "lyle@bluebonnetdrain.example.com",
+      "trades": ["plumbing"],
+      "does_not_do": [],
+      "service_zips": ["75206", "75214"],
+      "hours": {
+        "mon": "07:00-16:00",
+        "tue": "07:00-16:00",
+        "wed": "07:00-16:00",
+        "thu": "07:00-16:00",
+        "fri": "07:00-16:00",
+        "sat": "closed",
+        "sun": "closed"
+      },
+      "crew_size": 3,
+      "crm": "HCP"
+    },
+    {
+      "profile_id": "hp_904",
+      "business_name": "Trinity Rooter",
+      "owner_name": "Rufus Kendrick",
+      "phone": "4695550104",
+      "email": "rufus@trinityrooter.example.com",
+      "trades": ["plumbing"],
+      "does_not_do": [],
+      "service_zips": ["75204", "75206"],
+      "hours": "Weekdays 07:00-18:00 / Saturday 08:00-14:00",
+      "crew_size": 2,
+      "crm": "workiz"
+    },
+    {
+      "profile_id": "hp_905",
+      "business_name": "Cedar Crest Pest",
+      "owner_name": "Wilma Osei",
+      "phone": "+1 972 555 0150",
+      "email": "wilma@cedarcrestpest.example.com",
+      "trades": ["pest"],
+      "does_not_do": [],
+      "service_zips": ["75214"],
+      "hours": "by appointment only",
+      "crew_size": 1,
+      "crm": "Housecall Pro + Google Calendar"
+    }
+  ]
+}

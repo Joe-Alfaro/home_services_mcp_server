@@ -1,0 +1,7 @@
+{
+  "id": "com_0000000000000000000000000000b001",
+  "name": "Bluebonnet Drain Co LLC",
+  "phone_number": "214.555.0177",
+  "support_email": "office@bluebonnetdrain.example.com",
+  "address": { "city": "Dallas", "state": "TX", "zip": "75206" }
+}

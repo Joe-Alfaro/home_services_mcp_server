@@ -1,0 +1,50 @@
+{
+  "page": 1,
+  "page_size": 2,
+  "total_pages": 2,
+  "total_items": 3,
+  "customers": [
+    {
+      "id": "cus_00000000000000000000000000000c01",
+      "first_name": "Theo",
+      "last_name": "Marchetti",
+      "email": "theo.m@example.net",
+      "mobile_number": "972-555-0131",
+      "company": null,
+      "created_at": "2025-04-02T15:00:00Z",
+      "addresses": [
+        {
+          "id": "adr_00000000000000000000000000000a01",
+          "type": "service",
+          "street": "5827 Belmont Ave",
+          "street_line_2": null,
+          "city": "Dallas",
+          "state": "TX",
+          "zip": "75206",
+          "country": "US"
+        }
+      ]
+    },
+    {
+      "id": "cus_00000000000000000000000000000c02",
+      "first_name": "Priya",
+      "last_name": "Okonkwo",
+      "email": null,
+      "mobile_number": "(214) 555-0158",
+      "company": null,
+      "created_at": "2026-01-15T20:00:00Z",
+      "addresses": [
+        {
+          "id": "adr_00000000000000000000000000000a02",
+          "type": "service",
+          "street": "4533 LIVE OAK ST",
+          "street_line_2": "Apt. 4",
+          "city": null,
+          "state": "TX",
+          "zip": "75204",
+          "country": "US"
+        }
+      ]
+    }
+  ]
+}
