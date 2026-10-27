@@ -1,7 +1,7 @@
 # Architecture
 
 Requirements and done checks: [`docs/requirements/home-services-mcp.md`](docs/requirements/home-services-mcp.md).
-Requirement IDs (R1-R29, G1-Gn) below refer to that file.
+Requirement IDs (R1-R29, G1-G28) below refer to that file.
 
 ## Problem
 
@@ -18,7 +18,7 @@ conservatively, and exposes the result to AI agents through a read-only, privacy
 ## Components and data flow
 
 ```text
-DATA_PACK_DIR (never committed)
+DATA_PACK_DIR (default _private/data_pack in the repo root; never committed)
   │
   ▼
 src/adapters/<source>.ts      one per source; pure parse(files, ctx) → CandidateBatch
@@ -451,19 +451,39 @@ Every response item carries `sources` and, where merged, `confidence`. Propertie
 
 ## How the traps are handled
 
-| Trap                                                | Handling                                                                                             |
-| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Same provider in several sources                    | Provider resolution by phone, email domain, website, then name + trade (R6).                         |
-| Same home under different spellings, missing zip    | Address key normalization; zip inference from street segments with lowered confidence (R7).          |
-| Cancelled, rescheduled, limbo jobs                  | Status mapping tables; stale non-terminal → `limbo`; old slots of rescheduled jobs never block (R9). |
-| Homeowner names, phones, emails                     | Stored only in `homeowner_contacts`; reader role cannot read it; free text redacted (R17).           |
-| UTC vs zone-less local times, DST end on 2026-11-01 | `TimeBasis` per record; luxon conversion in America/Chicago (R12).                                   |
-| Estimates mixed with jobs                           | `kind: 'estimate'`; block time but never count as completed work (R4).                               |
-| One job, many visits                                | `visit` rows linked to a parent; counted once in history (R4).                                       |
-| CSV duplicates, blank cells, loose dates            | Collapsed with `duplicate_count`; blanks → null; unparseable → issue (R4).                           |
-| ICS personal, all-day, recurring events             | All busy blocks subtract; expanded occurrences; category kept server-side (R4, R13).                 |
-| Profile vs observed disagreement                    | `provider_conflicts`; lowers availability confidence and is shown in Q4 (R13).                       |
-| Unlisted traps                                      | Recorded as G-IDs in the requirements Gotchas section, each with handling and a test.                |
+Each confirmed trap is a G-ID in the requirements Gotchas section, with its done check. Components
+are paths under `src/` from the layout above.
+
+| G-ID | Trap                                                        | Component                                                                       | Handling                                                                                                       |
+| ---- | ----------------------------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| G1   | UTC vs zone-less local times vs mixed ICS zones             | `normalize/time.ts`; every adapter sets `TimeBasis`                             | luxon in America/Chicago, DST-aware; no host-zone dependence (R12).                                            |
+| G2   | Zone-less time in the repeated hour on 2026-11-01           | `normalize/time.ts`                                                             | Ambiguous local times take the earlier (CDT) instant; nonexistent times shift forward (R12).                   |
+| G3   | CRM B job repeated across a page boundary                   | `adapters/housecallPro.ts`                                                      | Pages read in numeric order; repeated IDs dropped with a warning issue (R1).                                   |
+| G4   | Estimates mixed with jobs; scheduled estimates take time    | `adapters/housecallPro.ts`, `adapters/spreadsheet.ts`; `availability/engine.ts` | `kind: 'estimate'`; never counted as work; scheduled estimates block time (R4, R13).                           |
+| G5   | Approved estimate and its job double-count                  | `resolve/jobs.ts`                                                               | Job linked to its estimate via `original_estimate_id`; one service in history (R8).                            |
+| G6   | One job, many visits; recurring jobs                        | `adapters/jobber.ts`; `availability/engine.ts`                                  | Visit rows under a parent; only listed visits, rules never expanded; per-visit status and money (R4).          |
+| G7   | Cents vs dollar strings vs `$1,234.50`                      | `normalize/money.ts`                                                            | Everything becomes integer `amount_cents` or `null` (R4).                                                      |
+| G8   | Status vocabularies, cancelled spellings, limbo             | `normalize/status.ts`, per-adapter mapping tables                               | One canonical set; CSV notes and ICS `CXL` read for cancellation; stale non-terminal → `limbo` (R9).           |
+| G9   | "Rescheduled" only in notes                                 | `normalize/status.ts`                                                           | `rescheduled_from` flag parsed from notes; no extra job, old slot never blocks (R9).                           |
+| G10  | Completed job dated in the future                           | `normalize/status.ts`; `availability/engine.ts`                                 | `suspect_date` issue; kept in history, not a booking (R9, R13).                                                |
+| G11  | Multi-day spans                                             | `availability/engine.ts`                                                        | Clipped to declared hours per day with a `multi_day_span` reason; no hours conflict (R13).                     |
+| G12  | Undated work                                                | every adapter; `availability/engine.ts`                                         | Null times, status `unscheduled`, no block; missing end → trade-default duration with a reason (R9, R13).      |
+| G13  | Lone Star Plumbing across two CRMs; "Lone Star" name prefix | `resolve/providers.ts`, `normalize/phone.ts`, `normalize/name.ts`               | Merge on phone digits, email domain, website; names alone never merge (R6, R8).                                |
+| G14  | Rebranded provider with two accounts                        | `resolve/providers.ts`                                                          | Phone match merges; both names kept as aliases (R6).                                                           |
+| G15  | Technician names shared across businesses                   | `resolve/providers.ts`                                                          | Employee names are never a match key (R6).                                                                     |
+| G16  | Messy CSV log                                               | `adapters/spreadsheet.ts`; `resolve/jobs.ts`                                    | Preamble skipped; dates resolved against the export date; duplicates collapsed with `duplicate_count` (R4).    |
+| G17  | ICS all-day, RRULE, transparent/tentative, mirrored jobs    | `adapters/ics.ts`; `resolve/jobs.ts`                                            | Exclusive all-day end; RRULE expanded in local time inside the window; mirrored CRM jobs merged (R4, R13).     |
+| G18  | CSV and calendar disagree for one provider                  | `resolve/jobs.ts`; `availability/confidence.ts`                                 | Same provider and start within 30 min merge; disagreements and single-source items lower confidence (R8, R13). |
+| G19  | Address variants and typos                                  | `normalize/address.ts`, `normalize/geocode.ts`; `resolve/properties.ts`         | Address key normalization; fuzzy street match against the reference with lowered confidence (R7).              |
+| G20  | Free-form profile hours, CRM names, phones                  | `normalize/hours.ts`, `normalize/phone.ts`, `adapters/profiles.ts`              | Hours parsed to a weekly schedule or flagged unknown; phones to 10 digits (R6, R13).                           |
+| G21  | Free-text job types and trade mapping                       | `normalize/trade.ts`                                                            | Provider trade first, refined by a curated phrase map with water-heater subtypes (R4, R21).                    |
+| G22  | Geocoding coverage and ambiguous streets                    | `normalize/geocode.ts`                                                          | Interpolation on street segments; otherwise `geocode_method = 'none'` with a reason (R3, R7).                  |
+| G23  | Profile vs observed trades, zips, hours, crew               | `resolve/providers.ts`; `availability/confidence.ts`                            | `provider_conflicts` rows; declared and observed shown side by side; crew treated as one schedule (R13).       |
+| G24  | Same home under many spellings; units                       | `resolve/properties.ts`                                                         | Units are separate homes; out-of-area keys include the zip (R7).                                               |
+| G25  | Snapshot and window edges                                   | `config.ts`; `availability/engine.ts`; `mcp/tools/*`                            | Windows on local midnights from configured "today", never the clock (R14).                                     |
+| G26  | History before the window or out of area                    | `mcp/tools/*`; `normalize/geocode.ts`                                           | Window filter on local time; out-of-area records kept but never placed in a radius (R7, R12).                  |
+| G27  | PII in ICS summaries, calendar names, CSV and CRM rows      | `adapters/ics.ts`, `normalize/redact.ts`, `mcp/privacy.ts`; `db/roles.sql`      | Names to `homeowner_contacts` only; free text redacted; reader role denied (R17).                              |
+| G28  | Same house number on another street                         | `normalize/address.ts`; `resolve/properties.ts`                                 | Matching requires the street, not number plus zip; fuzzy threshold rejects unrelated streets (R7).             |
 
 ## Test strategy
 

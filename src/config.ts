@@ -10,7 +10,7 @@ export const TIME_ZONE = 'America/Chicago'
 
 const DEFAULT_DB_PORT = 5434
 const DEFAULT_TODAY = '2026-11-02'
-const DEFAULT_DATA_PACK_DIR = '../_private/data_pack'
+const DEFAULT_DATA_PACK_DIR = '_private/data_pack'
 
 export interface Config {
   databaseUrl: string
