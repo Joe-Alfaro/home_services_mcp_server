@@ -64,6 +64,14 @@ offer openings at 3 a.m.
 **Caught by a validator** that traced each fact from source file to tool output instead of
 trusting unit tests. A follow-up pair persisted them and pinned the behaviour end to end.
 
+**6. The eval passed while a live agent would have choked.** The first history search returned
+every matching job with all of its citations: about 946 KB for the benchmark address. The
+scripted eval read that JSON without complaint and scored Q1 as a pass, because nothing checked
+how big the answer was. **Caught by a fresh validator** that called the tool the way an agent
+client would and saw the response was far past what one turn can read. The fix answers with
+per-trade counts, 3 samples per trade and a paged job list (about 41 KB by default), and the eval
+now fails a default answer over 50 KB and pages the full list to keep checking every job ID.
+
 ## What we took from it
 
 Agents are good at making the test in front of them pass and weak at noticing what no test asks

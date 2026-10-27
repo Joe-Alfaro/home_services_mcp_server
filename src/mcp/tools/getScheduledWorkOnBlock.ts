@@ -98,6 +98,6 @@ export function registerGetScheduledWorkOnBlock(server: McpServer, options: Serv
       inputSchema: scheduledWorkInput,
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
-    (args) => respond(() => getScheduledWorkOnBlock(args, options)),
+    (args) => respond('get_scheduled_work_on_block', () => getScheduledWorkOnBlock(args, options)),
   )
 }

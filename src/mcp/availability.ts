@@ -82,11 +82,14 @@ function iso(value: Date | null): string | null {
   return value === null ? null : value.toISOString()
 }
 
-/** A CSV-only booking is a single uncorroborated row: it blocks, but cautiously (D-041). */
-function workConfidence(row: WorkRow): Confidence {
-  return row.source_systems.length === 1 && row.source_systems[0] === 'spreadsheet'
-    ? 'medium'
-    : 'high'
+/**
+ * A CSV row is a hand-kept log: a booking only it records still blocks, but at low confidence
+ * (G18); a calendar event that mirrors it corroborates it to medium (D-041). CRM work is high.
+ */
+function workConfidence(row: WorkRow, mirrors: readonly BlockRow[]): Confidence {
+  const csvOnly = row.source_systems.length === 1 && row.source_systems[0] === 'spreadsheet'
+  if (!csvOnly) return 'high'
+  return mirrors.length === 0 ? 'low' : 'medium'
 }
 
 function earliest(a: Date | null, b: Date): Date {
@@ -111,7 +114,7 @@ function workBusy(row: WorkRow, mirrors: readonly BlockRow[]): BusyItem {
     endAt: iso(endAt),
     allDay: row.all_day,
     busy: true,
-    confidence: workConfidence(row),
+    confidence: workConfidence(row, mirrors),
     sources: mergeSources(readSources(row.sources), ...mirrors.map((m) => readSources(m.sources))),
     category: 'work',
     rescheduledFrom: row.rescheduled_from,

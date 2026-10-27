@@ -12,9 +12,12 @@ export class ToolInputError extends Error {
   }
 }
 
-/** One-line error text for a failed call; unexpected failures say so without internals. */
-export function errorText(error: unknown): string {
+/**
+ * One-line error text for a failed call. An unexpected failure (database, driver, bug) gets a
+ * generic message naming the tool: driver text can carry SQL, relation names, hosts or stored
+ * values, so it never reaches the client (R17, R18 c).
+ */
+export function errorText(tool: string, error: unknown): string {
   if (error instanceof ToolInputError) return `Invalid input. ${error.message}`
-  const message = error instanceof Error ? error.message : String(error)
-  return `The tool failed while reading the database: ${message}. Retry once; if it fails again, report it.`
+  return `${tool} failed because of an internal error while reading the data. Retry once; if it fails again, report that ${tool} is unavailable.`
 }

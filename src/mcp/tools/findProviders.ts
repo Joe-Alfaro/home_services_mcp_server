@@ -192,6 +192,6 @@ export function registerFindProviders(server: McpServer, options: ServerOptions)
       inputSchema: findProvidersInput,
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
-    (args) => respond(() => findProviders(args, options)),
+    (args) => respond('find_providers', () => findProviders(args, options)),
   )
 }
