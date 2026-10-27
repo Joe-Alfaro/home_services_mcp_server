@@ -54,7 +54,7 @@ All times are stored as instants and presented in America/Chicago.
 | `npm run setup`            | Start Postgres, migrate, ingest.                                        |
 | `npm run db:up`            | Start Postgres only and wait until healthy.                             |
 | `npm run migrate`          | Apply pending SQL migrations from `migrations/`.                        |
-| `npm run ingest`           | Load the data pack into the database.                                   |
+| `npm run ingest`           | Migrate, then load the data pack and build the canonical tables.        |
 | `npm start`, `npm run mcp` | Run the MCP server on stdio.                                            |
 | `npm test`                 | Unit tests (Vitest).                                                    |
 | `npm run test:integration` | Postgres integration tests in a throwaway Testcontainers database.      |
@@ -67,12 +67,21 @@ All times are stored as instants and presented in America/Chicago.
 
 ## Ingest
 
-`npm run ingest` runs every adapter in `src/adapters/registry.ts` on the files under
-`$DATA_PACK_DIR/sources/` that match its patterns, stores each candidate record with its provenance
-in `source_records` (and every issue in `ingest_issues`) in one transaction that replaces the
-previous run, and prints a per-source summary: files read, record counts, jobs by kind and status,
-and issues by severity and code. Files no adapter claims are listed. It exits non-zero when any
-`error`-severity issue was raised.
+`npm run ingest` (`src/ingest/pipeline.ts`) applies pending migrations, runs every adapter in
+`src/adapters/registry.ts` on the files under `$DATA_PACK_DIR/sources/` that match its patterns,
+normalizes and resolves the candidates (`src/normalize/`, `src/resolve/`), and in one transaction
+that replaces the previous run stores each candidate with its provenance in `source_records` (and
+every issue in `ingest_issues`), the street segments from `$DATA_PACK_DIR/reference/`, and the
+canonical tables (providers, properties, jobs, calendar blocks, declared hours, links with method,
+confidence and evidence, and homeowner contacts in their own table). It prints a per-source summary
+(files read, record counts, jobs by kind and status, issues by severity and code, unclaimed
+files), the canonical row counts and the link counts by method. It exits non-zero when any
+`error`-severity issue was raised. Running it again leaves the same rows.
+
+The MCP server reads only the `v_*` views (`migrations/0004_read_views.sql`) as the
+`hsmcp_reader` role, which has `SELECT` on those views and nothing else. The views carry no
+homeowner names, phones, emails, house numbers or units; every row has a `sources` array of
+citations.
 
 ## Migrations
 

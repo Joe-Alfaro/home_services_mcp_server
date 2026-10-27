@@ -127,6 +127,8 @@ export interface JobCandidate {
   isRecurring: boolean
   /** Free-text evidence of a reschedule, e.g. "Rescheduled from 11/1". */
   rescheduleNote: string | null
+  /** CRM B jobs: the native ID of the approved estimate the job was created from (G5). */
+  originalEstimateRecordId?: string | null
 }
 
 export interface CalendarBlockCandidate {

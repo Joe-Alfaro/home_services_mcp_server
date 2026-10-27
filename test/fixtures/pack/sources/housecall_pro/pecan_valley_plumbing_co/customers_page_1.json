@@ -1,0 +1,50 @@
+{
+  "page": 1,
+  "page_size": 2,
+  "total_pages": 2,
+  "total_items": 3,
+  "customers": [
+    {
+      "id": "cus-pv-01",
+      "first_name": "Beatrix",
+      "last_name": "Quennell",
+      "email": "beatrix.q@example.org",
+      "mobile_number": "214-555-0187",
+      "company": null,
+      "created_at": "2025-12-01T15:00:00Z",
+      "addresses": [
+        {
+          "id": "adr-pv-01",
+          "type": "service",
+          "street": "5823 BELMONT AVENUE",
+          "street_line_2": null,
+          "city": "dallas",
+          "state": "TX",
+          "zip": "75206",
+          "country": "US"
+        }
+      ]
+    },
+    {
+      "id": "cus-pv-02",
+      "first_name": "Fennimore",
+      "last_name": "Strand",
+      "email": "fennimore.s@example.com",
+      "mobile_number": "972-555-0192",
+      "company": null,
+      "created_at": "2025-12-01T15:00:00Z",
+      "addresses": [
+        {
+          "id": "adr-pv-02",
+          "type": "service",
+          "street": "4541 Live Oak St",
+          "street_line_2": null,
+          "city": "Dallas",
+          "state": "TX",
+          "zip": "75204",
+          "country": "US"
+        }
+      ]
+    }
+  ]
+}

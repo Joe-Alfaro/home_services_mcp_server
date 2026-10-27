@@ -1,0 +1,94 @@
+{
+  "page": 1,
+  "page_size": 2,
+  "total_pages": 1,
+  "total_items": 2,
+  "jobs": [
+    {
+      "id": "job-cs-01",
+      "invoice_number": "9101",
+      "description": "Drain cleaning",
+      "customer": {
+        "id": "cus-cs-01",
+        "first_name": "Gideon",
+        "last_name": "Marchbanks",
+        "email": "gideon.m@example.net",
+        "mobile_number": "469-555-0194"
+      },
+      "address": {
+        "id": "adr-cs-01",
+        "street": "150 Elm St",
+        "street_line_2": null,
+        "city": "Dallas",
+        "state": "TX",
+        "zip": "75204"
+      },
+      "work_status": "complete unrated",
+      "schedule": {
+        "scheduled_start": "2026-09-03T09:00:00",
+        "scheduled_end": "2026-09-03T11:00:00",
+        "arrival_window": 60
+      },
+      "work_timestamps": {
+        "on_my_way_at": null,
+        "started_at": "2026-09-03T09:00:00",
+        "completed_at": "2026-09-03T11:00:00"
+      },
+      "total_amount": 24000,
+      "outstanding_balance": 0,
+      "assigned_employees": [
+        {
+          "first_name": "Ambrose",
+          "last_name": "Teague"
+        }
+      ],
+      "tags": [],
+      "original_estimate_id": null,
+      "notes": null,
+      "created_at": "2025-12-15T15:00:00Z"
+    },
+    {
+      "id": "job-cs-02",
+      "invoice_number": "9102",
+      "description": "toilet replace",
+      "customer": {
+        "id": "cus-cs-02",
+        "first_name": "Marisela",
+        "last_name": "Dunworth",
+        "email": null,
+        "mobile_number": "214-555-0182"
+      },
+      "address": {
+        "id": "adr-cs-02",
+        "street": "4612 Live Oak St",
+        "street_line_2": null,
+        "city": "Dallas",
+        "state": "TX",
+        "zip": "75204"
+      },
+      "work_status": "scheduled",
+      "schedule": {
+        "scheduled_start": "2026-11-09T08:00:00",
+        "scheduled_end": "2026-11-09T10:00:00",
+        "arrival_window": 60
+      },
+      "work_timestamps": {
+        "on_my_way_at": null,
+        "started_at": null,
+        "completed_at": null
+      },
+      "total_amount": 42000,
+      "outstanding_balance": 42000,
+      "assigned_employees": [
+        {
+          "first_name": "Ambrose",
+          "last_name": "Teague"
+        }
+      ],
+      "tags": [],
+      "original_estimate_id": null,
+      "notes": null,
+      "created_at": "2025-12-15T15:00:00Z"
+    }
+  ]
+}

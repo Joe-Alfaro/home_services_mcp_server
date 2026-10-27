@@ -285,6 +285,9 @@ function parseAccount(
         amountRaw: amountCents === null ? null : String(amountCents),
         isRecurring: false,
         rescheduleNote: rescheduleNoteOf(notes),
+        ...(kind === 'job'
+          ? { originalEstimateRecordId: textAt(row, 'original_estimate_id') }
+          : {}),
       },
       ctx,
       issues,

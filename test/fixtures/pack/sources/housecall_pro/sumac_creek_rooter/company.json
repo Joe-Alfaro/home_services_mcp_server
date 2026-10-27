@@ -1,0 +1,11 @@
+{
+  "id": "com-cs-01",
+  "name": "Sumac Creek Rooter",
+  "phone_number": "972.555.0150",
+  "support_email": "hello@sumaccreekrooter.example.com",
+  "address": {
+    "city": "Dallas",
+    "state": "TX",
+    "zip": "75204"
+  }
+}

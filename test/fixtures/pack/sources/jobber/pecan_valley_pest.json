@@ -1,0 +1,118 @@
+{
+  "data": {
+    "account": {
+      "id": "acct-pvpest-01",
+      "name": "Pecan Valley Pest Control",
+      "phone": "214-555-0120",
+      "owner": { "name": "Harlan Voss" },
+      "industry": "PEST_CONTROL"
+    },
+    "clients": {
+      "nodes": [
+        {
+          "id": "client-pvpest-01",
+          "firstName": "Corrigan",
+          "lastName": "Hale",
+          "companyName": null,
+          "isCompany": false,
+          "emails": [{ "address": "corrigan.hale@example.org", "primary": true }],
+          "phones": [{ "number": "469-555-0181", "primary": true }],
+          "createdAt": "2026-03-20T15:00:00Z",
+          "properties": {
+            "nodes": [
+              {
+                "id": "prop-pvpest-01",
+                "address": {
+                  "street1": "4518 Live Oak St",
+                  "street2": "Apt 2",
+                  "city": "Dallas",
+                  "province": "TX",
+                  "postalCode": "75204",
+                  "country": "US"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "pageInfo": { "hasNextPage": false }
+    },
+    "jobs": {
+      "nodes": [
+        {
+          "id": "job-pvpest-01",
+          "jobNumber": 501,
+          "title": "Quarterly pest treatment",
+          "jobType": "RECURRING",
+          "jobStatus": "active",
+          "createdAt": "2026-03-25T15:00:00Z",
+          "client": { "id": "client-pvpest-01" },
+          "property": { "id": "prop-pvpest-01" },
+          "total": null,
+          "recurrence": {
+            "rule": "Every 13 week(s) on Friday",
+            "startDate": "2026-04-10",
+            "endDate": null
+          },
+          "instructions": "Call Corrigan Hale at 469-555-0181 before arriving",
+          "visits": {
+            "nodes": [
+              {
+                "id": "visit-pvpest-01",
+                "title": null,
+                "startAt": "2026-04-10T14:00:00Z",
+                "endAt": "2026-04-10T15:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2026-04-10T15:00:00Z",
+                "invoicedAmount": "120.00",
+                "assignedUsers": { "nodes": [{ "name": { "full": "Harlan Voss" } }] }
+              },
+              {
+                "id": "visit-pvpest-02",
+                "title": null,
+                "startAt": "2026-07-10T14:00:00Z",
+                "endAt": "2026-07-10T15:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2026-07-10T15:00:00Z",
+                "invoicedAmount": "120.00",
+                "assignedUsers": { "nodes": [{ "name": { "full": "Harlan Voss" } }] }
+              },
+              {
+                "id": "visit-pvpest-03",
+                "title": null,
+                "startAt": "2026-11-04T15:00:00Z",
+                "endAt": "2026-11-04T16:00:00Z",
+                "visitStatus": "CANCELLED",
+                "completedAt": null,
+                "invoicedAmount": null,
+                "assignedUsers": { "nodes": [{ "name": { "full": "Harlan Voss" } }] }
+              },
+              {
+                "id": "visit-pvpest-04",
+                "title": null,
+                "startAt": "2026-11-16T05:30:00Z",
+                "endAt": "2026-11-16T06:30:00Z",
+                "visitStatus": "UPCOMING",
+                "completedAt": null,
+                "invoicedAmount": null,
+                "assignedUsers": { "nodes": [{ "name": { "full": "Harlan Voss" } }] }
+              },
+              {
+                "id": "visit-pvpest-05",
+                "title": null,
+                "startAt": "2026-11-16T06:30:00Z",
+                "endAt": "2026-11-16T07:30:00Z",
+                "visitStatus": "UPCOMING",
+                "completedAt": null,
+                "invoicedAmount": null,
+                "assignedUsers": { "nodes": [{ "name": { "full": "Harlan Voss" } }] }
+              }
+            ]
+          }
+        }
+      ],
+      "pageInfo": { "hasNextPage": false }
+    }
+  },
+  "extensions": { "exportedAt": "2026-11-02T06:00:00Z", "apiVersion": "2025-04-16" }
+}
