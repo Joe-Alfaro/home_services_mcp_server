@@ -1,0 +1,99 @@
+{
+  "question": "Which handymen have done work in zip 75214 and have an opening of at least 2 hours in the next 3 days?",
+  "tool": "find_providers",
+  "derivation": "Derived from the raw data pack by a separate pass that never read the implementation. Handymen = the 8 profiles whose trades include handyman; CRM accounts join to profiles on normalized 10-digit phone, so the old-name Jobber account (Big D Handyman) and Lakewood Home Repair are one provider. 'Done work in 75214' = at least one completed job at a 75214 property (CSV rows without a zip get it from the reference street when the street exists in exactly one zip). Openings use the crew-aware availability model (decision D-041): capacity = min(profile crew_size, max concurrent bookings observed in the provider's history), minimum 1; a time is open when concurrent busy items < capacity. Busy = CRM scheduled jobs and estimates, limbo or unscheduled items with a start (1 h when there is no end), calendar job, personal, all-day and recurring events (TENTATIVE counts, CXL and TRANSPARENT do not), and CSV future rows not already on the calendar. Openings are clipped to declared hours inside the window [2026-11-02 00:00, 2026-11-05 00:00) America/Chicago. Result: 7 of the 8 handymen qualify; Uptown Odd Jobs has openings but no completed 75214 work.",
+  "tolerance": "The provider set must match exactly (names compared case- and punctuation-insensitively, legal suffixes such as Co/LLC ignored; any listed alias counts as that provider, and a provider listed twice fails). Each listed provider needs at least one opening of >= minMinutes inside the window, and every opening needs a confidence. Exact opening boundaries are not compared: referenceOpenings are examples from the derivation and are reported as notes. For Ray's Fix-It (crew 1, so capacity 1) no opening may overlap the busy intervals listed; his TENTATIVE Wednesday hold may count as busy or not, so it is not listed.",
+  "window": { "from": "2026-11-02T00:00:00-06:00", "to": "2026-11-05T00:00:00-06:00" },
+  "minMinutes": 120,
+  "providers": [
+    {
+      "name": "Ray's Fix-It",
+      "aliases": ["Rays Fix It"],
+      "profileId": "hp_002",
+      "completedIn75214": 29,
+      "evidence": ["csv:rays_fixit_job_log.csv:line187", "csv:rays_fixit_job_log.csv:line191"],
+      "referenceOpenings": [
+        { "start": "2026-11-02T11:15:00-06:00", "end": "2026-11-02T15:00:00-06:00" },
+        { "start": "2026-11-04T10:30:00-06:00", "end": "2026-11-04T13:00:00-06:00" }
+      ],
+      "busy": [
+        { "start": "2026-11-02T08:15:00-06:00", "end": "2026-11-02T11:15:00-06:00" },
+        { "start": "2026-11-02T15:00:00-06:00", "end": "2026-11-02T15:45:00-06:00" },
+        { "start": "2026-11-03T08:00:00-06:00", "end": "2026-11-03T09:30:00-06:00" },
+        { "start": "2026-11-03T10:00:00-06:00", "end": "2026-11-03T11:30:00-06:00" },
+        { "start": "2026-11-03T13:00:00-06:00", "end": "2026-11-03T15:00:00-06:00" },
+        { "start": "2026-11-03T15:00:00-06:00", "end": "2026-11-03T15:45:00-06:00" },
+        { "start": "2026-11-04T08:00:00-06:00", "end": "2026-11-04T10:30:00-06:00" },
+        { "start": "2026-11-04T15:00:00-06:00", "end": "2026-11-04T15:45:00-06:00" }
+      ]
+    },
+    {
+      "name": "White Rock Handyman",
+      "aliases": [],
+      "profileId": "hp_004",
+      "completedIn75214": 32,
+      "evidence": ["workiz:9JTAE4YG:HVI7XE"],
+      "referenceOpenings": [
+        { "start": "2026-11-02T12:30:00-06:00", "end": "2026-11-02T17:00:00-06:00" },
+        { "start": "2026-11-03T08:00:00-06:00", "end": "2026-11-03T10:00:00-06:00" },
+        { "start": "2026-11-04T14:45:00-06:00", "end": "2026-11-04T17:00:00-06:00" }
+      ]
+    },
+    {
+      "name": "M Streets Handyman",
+      "aliases": [],
+      "profileId": "hp_006",
+      "completedIn75214": 41,
+      "evidence": ["hcp:job_1b931c09534722fac80671a932caf895"],
+      "referenceOpenings": [
+        { "start": "2026-11-04T09:00:00-06:00", "end": "2026-11-04T14:30:00-06:00" }
+      ]
+    },
+    {
+      "name": "Peak Home Services",
+      "aliases": [],
+      "profileId": "hp_008",
+      "completedIn75214": 37,
+      "evidence": [
+        "jobber:Z2lkOi8vSm9iYmVyL0pvYi83MTA3Mjg2/visit:Z2lkOi8vSm9iYmVyL1Zpc2l0LzcxMDcyODY"
+      ],
+      "referenceOpenings": [
+        { "start": "2026-11-02T12:30:00-06:00", "end": "2026-11-02T14:30:00-06:00" },
+        { "start": "2026-11-03T08:00:00-06:00", "end": "2026-11-03T10:00:00-06:00" },
+        { "start": "2026-11-04T08:00:00-06:00", "end": "2026-11-04T17:00:00-06:00" }
+      ]
+    },
+    {
+      "name": "Lakewood Home Repair",
+      "aliases": ["Big D Handyman"],
+      "profileId": "hp_001",
+      "completedIn75214": 88,
+      "evidence": [],
+      "referenceOpenings": [
+        { "start": "2026-11-03T08:00:00-06:00", "end": "2026-11-03T11:00:00-06:00" },
+        { "start": "2026-11-03T13:30:00-06:00", "end": "2026-11-03T17:00:00-06:00" }
+      ]
+    },
+    {
+      "name": "Mr. Handy Dallas East",
+      "aliases": [],
+      "profileId": "hp_003",
+      "completedIn75214": 43,
+      "evidence": [],
+      "referenceOpenings": [
+        { "start": "2026-11-04T07:00:00-06:00", "end": "2026-11-04T16:00:00-06:00" }
+      ]
+    },
+    {
+      "name": "Honey Do Pros DFW",
+      "aliases": [],
+      "profileId": "hp_005",
+      "completedIn75214": 3,
+      "evidence": [],
+      "referenceOpenings": [
+        { "start": "2026-11-02T07:00:00-06:00", "end": "2026-11-02T18:00:00-06:00" }
+      ]
+    }
+  ],
+  "mustExclude": [{ "name": "Uptown Odd Jobs", "reason": "no completed work in 75214" }]
+}

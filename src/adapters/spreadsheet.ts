@@ -12,6 +12,7 @@ import {
   mergeBatches,
   refFactory,
   rescheduleNoteOf,
+  rescheduledFromOf,
   sortByPath,
 } from './shared.ts'
 import type {
@@ -417,6 +418,7 @@ function parseFile(file: SourceFile, ctx: AdapterContext): CandidateBatch {
       amountRaw,
       isRecurring: false,
       rescheduleNote: rescheduleNoteOf(note),
+      rescheduledFrom: rescheduledFromOf(rescheduleNoteOf(note), isoDate),
     }
   })
 

@@ -31,7 +31,7 @@ export const JOB_CONFIDENCE: Readonly<Record<JobMatchMethod, number>> = {
 export const CROSS_SOURCE_TOLERANCE_MINUTES = 30
 
 /** A calendar mirror whose text disagrees with the job's is still one booking, but less sure. */
-const MIRROR_TEXT_MISMATCH_CONFIDENCE = 0.6
+export const MIRROR_TEXT_MISMATCH_CONFIDENCE = 0.6
 
 const TIME_ZONE = 'America/Chicago'
 
@@ -185,7 +185,10 @@ function foldEstimates(groups: Group[]): Group[] {
   return groups.filter((group) => !folded.has(group))
 }
 
-/** G16: CSV rows identical after normalization collapse into one job. */
+/**
+ * G16, D-084: CSV rows identical after normalization collapse into one job. Status and notes are
+ * part of the signature, so a cancelled copy of a booked row stays its own job.
+ */
 function collapseDuplicateRows(groups: Group[]): Group[] {
   const bySignature = new Map<string, Group>()
   return groups.filter((group) => {
@@ -199,6 +202,8 @@ function collapseDuplicateRows(groups: Group[]): Group[] {
       group.propertyId ?? job.propertyKey,
       normalizeText(job.tradeRaw),
       job.amountCents,
+      job.status,
+      normalizeText(job.notesRaw),
     ])
     const first = bySignature.get(signature)
     if (first === undefined) {
@@ -253,6 +258,8 @@ function isMirrorable(block: CalendarBlockCandidate): boolean {
  * G17, G18, D-021: a busy work block of the same provider within the tolerance mirrors a job
  * (no property needed). A date-only row takes the time of the provider's single work block that
  * local day. The block stays a calendar block; it is linked to the job and listed as mirrored.
+ * G18, D-085: when the block's property and the job's are both known and differ, they are two
+ * bookings, never a mirror.
  */
 function mirrorCalendarBlocks(
   groups: Group[],
@@ -267,9 +274,20 @@ function mirrorCalendarBlocks(
     .sort((a, b) => compareText(a.startAt, b.startAt) || compareText(refKey(a.ref), refKey(b.ref)))
   const providerOf = (block: CalendarBlockCandidate) =>
     input.providerIdByKey.get(block.providerKey) ?? block.providerKey
+  const propertyOf = (block: CalendarBlockCandidate) =>
+    block.propertyKey === undefined || block.propertyKey === null
+      ? null
+      : (input.propertyIdByKey.get(block.propertyKey) ?? null)
+  /** true: same known property; false: different known properties; null: either is unknown. */
+  const sameProperty = (group: Group, block: CalendarBlockCandidate) => {
+    const blockProperty = propertyOf(block)
+    if (group.propertyId === null || blockProperty === null) return null
+    return group.propertyId === blockProperty
+  }
 
   function link(group: Group, block: CalendarBlockCandidate, evidence: Record<string, unknown>) {
     const agrees = textsAgree(group.primary.tradeRaw, block.summaryRaw)
+    const addressEvidence = sameProperty(group, block) === true ? { addressAgrees: true } : {}
     const confidence = agrees ? JOB_CONFIDENCE.calendar_mirror : MIRROR_TEXT_MISMATCH_CONFIDENCE
     group.links = [
       ...group.links,
@@ -277,7 +295,7 @@ function mirrorCalendarBlocks(
         ref: block.ref,
         method: 'calendar_mirror',
         confidence,
-        evidence: { ...evidence, textAgrees: agrees },
+        evidence: { ...evidence, textAgrees: agrees, ...addressEvidence },
       },
     ]
     usedGroups.add(group)
@@ -293,7 +311,8 @@ function mirrorCalendarBlocks(
           group.providerId === providerId &&
           group.startAt !== null &&
           !isDateOnly(group) &&
-          group.primary.status !== 'cancelled',
+          group.primary.status !== 'cancelled' &&
+          sameProperty(group, block) !== false,
       )
       .map((group) => ({ group, minutesApart: minutesBetween(group.startAt ?? '', block.startAt) }))
       .filter((entry) => entry.minutesApart <= CROSS_SOURCE_TOLERANCE_MINUTES)
@@ -308,7 +327,10 @@ function mirrorCalendarBlocks(
     .forEach((group) => {
       const day = localDate(group.startAt ?? '')
       const sameDay = candidates.filter(
-        (block) => providerOf(block) === group.providerId && localDate(block.startAt) === day,
+        (block) =>
+          providerOf(block) === group.providerId &&
+          localDate(block.startAt) === day &&
+          sameProperty(group, block) !== false,
       )
       const [only] = sameDay
       if (only === undefined || sameDay.length > 1 || !timedLeft.includes(only)) return

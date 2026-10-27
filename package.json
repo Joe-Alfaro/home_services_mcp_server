@@ -13,11 +13,12 @@
     "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run scrub",
     "db:up": "docker compose up -d --wait",
     "migrate": "tsx src/cli/migrate.ts",
-    "ingest": "tsx src/cli/setup.ts",
+    "ingest": "tsx src/cli/ingest.ts",
     "setup": "npm run db:up && npm run ingest",
     "mcp": "tsx src/cli/mcp.ts",
     "prepare": "husky",
-    "start": "tsx src/cli/mcp.ts"
+    "start": "tsx src/cli/mcp.ts",
+    "eval": "tsx eval/run.ts"
   },
   "license": "UNLICENSED",
   "type": "module",

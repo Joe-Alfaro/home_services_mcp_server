@@ -1,12 +1,15 @@
 import type { ContactPii, PropertyCandidate, PropertyKey, SourceRef } from '../adapters/types.ts'
 import {
   FREE_TEXT_CONFIDENCE,
+  FUZZY_STREET_CONFIDENCE,
   INFERRED_ZIP_CONFIDENCE,
   normalizeAddress,
   type NormalizedAddress,
 } from '../normalize/address.ts'
 import { geocode, type GeocodeResult, type StreetIndex } from '../normalize/geocode.ts'
 import { compareText, refKey, stableId } from './ids.ts'
+
+export { FUZZY_STREET_CONFIDENCE }
 
 export type PropertyMatchMethod = 'exact_key' | 'inferred_zip' | 'free_text' | 'fuzzy_street'
 
@@ -126,6 +129,14 @@ export function resolveProperties(
           zipInferred: item.address.zipInferred,
           streetMatch: item.address.streetMatch,
           reasons: item.address.reasons,
+          ...(item.address.streetMatch === 'fuzzy'
+            ? {
+                editDistance: item.address.streetEditDistance,
+                matchedStreet: [item.address.streetName, item.address.streetType]
+                  .filter((part) => part !== null)
+                  .join(' '),
+              }
+            : {}),
         },
       })),
     }

@@ -37,8 +37,11 @@ function parseDays(text: string): Weekday[] | null {
   if (range?.[1] !== undefined && range[2] !== undefined) {
     const from = dayOf(range[1])
     const to = dayOf(range[2])
-    if (from === null || to === null || to < from) return null
-    return ALL_DAYS.filter((day) => day >= from && day <= to)
+    if (from === null || to === null) return null
+    // "Sun-Thu" and "Fri-Mon" wrap past Sunday (G20).
+    return ALL_DAYS.filter((day) =>
+      from <= to ? day >= from && day <= to : day >= from || day <= to,
+    )
   }
   const single = dayOf(lower)
   return single === null ? null : [single]
