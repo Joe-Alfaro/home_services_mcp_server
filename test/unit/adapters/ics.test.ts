@@ -76,9 +76,9 @@ describe('icsAdapter', () => {
   describe('blocks', () => {
     it('emits one block per occurrence inside the window and nothing else', () => {
       const batch = parseFixture()
-      // 10 single events in the window, 4 occurrences of the weekly Friday event (one
+      // 11 single events in the window, 4 occurrences of the weekly Friday event (one
       // EXDATE), 5 of the open-ended Monday event; the 2023 event is outside the window.
-      expect(batch.calendarBlocks).toHaveLength(19)
+      expect(batch.calendarBlocks).toHaveLength(20)
       expect(batch.properties).toEqual([])
       expect(batch.jobs).toEqual([])
       expect(batch.declaredHours).toEqual([])
@@ -127,6 +127,14 @@ describe('icsAdapter', () => {
       expect(block.allDay).toBe(true)
       expect(block.timeBasis).toBe('date_only')
       expect(block.busy).toBe(true)
+    })
+
+    it('treats a multi-day all-day end date as exclusive (G17)', () => {
+      const block = blockOf(parseFixture().calendarBlocks, 'allday-multi-14')
+      // 20261110 -> 20261113 blocks Nov 10-12 local, not Nov 13.
+      expectInstant(block.startAt, '2026-11-10T06:00:00Z')
+      expectInstant(block.endAt, '2026-11-13T06:00:00Z')
+      expect(block.allDay).toBe(true)
     })
 
     it('makes an all-day event on the DST change day 25 hours long', () => {
@@ -217,7 +225,7 @@ describe('icsAdapter', () => {
         .replace(/\n/g, '\r\n'),
     )
     const blocks = parseFixture(files).calendarBlocks
-    expect(blocks).toHaveLength(19)
+    expect(blocks).toHaveLength(20)
     expect(blockOf(blocks, 'tzid-job-1').summaryRaw).toBe('Job - Fairbanks (4526 live oak st)')
   })
 })

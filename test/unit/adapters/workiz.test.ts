@@ -287,6 +287,18 @@ describe('workizAdapter', () => {
       expect(issuesFor(batch, JOB_SCHEDULED).map((i) => i.code)).toContain('status.unmapped')
     })
 
+    it('keeps a Done job dated after today in history and flags the date (G10)', () => {
+      const files = withJob(JOB_DONE, (job) => {
+        job.JobDateTime = '2026-11-10 09:00:00'
+        job.JobEndDateTime = '2026-11-10 11:00:00'
+      })
+      const batch = parseFixture(files)
+      const job = jobById(batch.jobs, JOB_DONE)
+      expect(job.status).toBe('completed')
+      const codes = issuesFor(batch, JOB_DONE).map((issue) => issue.code)
+      expect(codes.some((code) => code.includes('suspect_date'))).toBe(true)
+    })
+
     it('reports no errors and no unmapped statuses on the clean fixture', () => {
       const batch = parseFixture()
       expect(batch.issues.filter((issue) => issue.severity === 'error')).toEqual([])

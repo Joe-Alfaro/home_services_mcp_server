@@ -198,8 +198,12 @@ describe('housecallProAdapter', () => {
       const issues = issuesFor(parseFixture(), JOB_PAGE_BOUNDARY)
       expect(issues.length).toBeGreaterThan(0)
       issues.forEach((issue) => {
-        expect(issue.severity).not.toBe('error')
+        expect(issue.severity).toBe('warn')
       })
+      // G3: the issue names both pages the row appeared on.
+      const messages = issues.map((issue) => issue.message).join(' ')
+      expect(messages).toContain('jobs_page_1')
+      expect(messages).toContain('jobs_page_2')
     })
 
     it('reads pages in numeric order, so page 10 is not mistaken for page 1', () => {

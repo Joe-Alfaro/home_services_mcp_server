@@ -26,6 +26,16 @@ describe('localToInstant', () => {
     expectInstant(localToInstant('2026-11-01T01:30:00'), '2026-11-01T06:30:00Z')
   })
 
+  it('moves the nonexistent spring-forward time 2026-03-08T02:30 forward without throwing (G2)', () => {
+    expectInstant(localToInstant('2026-03-08T02:30:00'), '2026-03-08T08:30:00Z')
+  })
+
+  it('gives a 01:30-03:00 job on the fall-back night 150 minutes (G2)', () => {
+    const start = localToInstant('2026-11-01T01:30:00')
+    const end = localToInstant('2026-11-01T03:00:00')
+    expect(Date.parse(end ?? '') - Date.parse(start ?? '')).toBe(150 * 60 * 1000)
+  })
+
   it('accepts an explicit zone argument', () => {
     expectInstant(localToInstant('2026-11-02T09:00', 'America/Chicago'), '2026-11-02T15:00:00Z')
   })

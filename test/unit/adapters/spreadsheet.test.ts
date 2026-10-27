@@ -19,7 +19,7 @@ const PROVIDER_KEY = 'spreadsheet:tonys_handy_help_job_log'
 
 // The fixture has two preamble lines and the header on line 3, so data starts at row:4.
 // Rows are in chronological order; the sheet was exported Friday 2026-10-30.
-const DATA_ROWS = Array.from({ length: 13 }, (_, index) => `row:${String(index + 4)}`)
+const DATA_ROWS = Array.from({ length: 14 }, (_, index) => `row:${String(index + 4)}`)
 
 function parseFixture(files = loadFixtureFiles('spreadsheet')) {
   return spreadsheetAdapter.parse(files, makeCtx())
@@ -86,7 +86,7 @@ describe('spreadsheetAdapter', () => {
   describe('rows (R4 g)', () => {
     it('skips the preamble rows and the header', () => {
       const batch = parseFixture()
-      expect(batch.jobs).toHaveLength(13)
+      expect(batch.jobs).toHaveLength(14)
       batch.jobs.forEach((job) => {
         expect(job.tradeRaw).not.toBe('Job')
         expect(job.tradeRaw ?? '').not.toContain('JOB LOG')
@@ -122,6 +122,12 @@ describe('spreadsheetAdapter', () => {
       issues.forEach((issue) => {
         expect(['warn', 'error']).toContain(issue.severity)
       })
+    })
+
+    it('keeps a "2nd trip" row on its own date as a separate job (G16)', () => {
+      const batch = parseFixture()
+      expect(row(batch, 17).propertyKey).toBe(row(batch, 9).propertyKey)
+      expect(row(batch, 17).ref.sourceRecordId).not.toBe(row(batch, 9).ref.sourceRecordId)
     })
 
     it('keeps duplicate rows as separate jobs and flags the repeat (resolve collapses them)', () => {
@@ -167,6 +173,7 @@ describe('spreadsheetAdapter', () => {
       [12, '2026-11-02T14:00:00Z'], // "Mon" = first Monday after export, CST
       [13, '2026-11-03T19:00:00Z'], // "next tues" "13:00"
       [15, '2026-11-06T14:00:00Z'], // "Fri 11/6" "8am"
+      [17, '2026-11-05T15:00:00Z'], // "Thurs" "9am" (G16)
     ])('reads row %i as %s', (line, expected) => {
       const job = row(parseFixture(), line)
       expectInstant(job.startAt, expected)
