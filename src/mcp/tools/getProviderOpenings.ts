@@ -90,6 +90,6 @@ export function registerGetProviderOpenings(server: McpServer, options: ServerOp
       inputSchema: providerOpeningsInput,
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
-    (args) => respond(() => getProviderOpenings(args, options)),
+    (args) => respond('get_provider_openings', () => getProviderOpenings(args, options)),
   )
 }

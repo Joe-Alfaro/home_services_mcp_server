@@ -23,7 +23,7 @@ Use when the question names a provider ("tell me about <business>", "what's <bus
 
 Do not use it to search providers by trade or zip (use find_providers instead), to rank providers for a job (use rank_providers_for_job), or for openings in a specific date range (use get_provider_openings).
 
-Parameters: providerName (business name) or providerId (from another tool), openingsLimit (1-10 next openings, searched over the next 30 days).
+Parameters: providerName (business name) or providerId (from another tool), openingsLimit (1-10 next openings, searched over the next 30 days), minMinutes (shortest opening to return, 0-720 minutes, default 30).
 History counts: completed = completed jobs and visits (estimates are counted separately, never as work).
 
 Example: {"providerName": "Lone Star Plumbing", "openingsLimit": 3}`
@@ -40,12 +40,14 @@ export const providerProfileInput = {
   openingsLimit: intField('openingsLimit', 1, 10, 'openings')
     .default(3)
     .describe('How many next openings to return, 1-10. Default 3.'),
+  minMinutes: intField('minMinutes', 0, 720, 'minutes')
+    .default(30)
+    .describe('Shortest opening to return, in minutes (0-720). Default 30.'),
 }
 
 type Input = z.infer<z.ZodObject<typeof providerProfileInput>>
 
 const OPENINGS_HORIZON_DAYS = 30
-const MIN_OPENING_MINUTES = 30
 const WEEKDAY_NAMES = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
 
 function nameKey(name: string): string {
@@ -234,7 +236,7 @@ export async function getProviderProfile(input: Input, options: ServerOptions) {
       [provider],
       windowInstants(window),
       options.now,
-      MIN_OPENING_MINUTES,
+      input.minMinutes,
     ),
   ])
   const found = availability.get(provider.id)
@@ -260,6 +262,7 @@ export async function getProviderProfile(input: Input, options: ServerOptions) {
       crewSize: provider.crewSize,
       capacity: found?.result.capacity ?? 1,
       hoursSource: found?.result.hoursSource ?? 'none',
+      minMinutes: input.minMinutes,
       declaredHours: hours,
       searchedUntil: presentOptional(windowInstants(window).to),
     },
@@ -285,6 +288,6 @@ export function registerGetProviderProfile(server: McpServer, options: ServerOpt
       inputSchema: providerProfileInput,
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
-    (args) => respond(() => getProviderProfile(args, options)),
+    (args) => respond('get_provider_profile', () => getProviderProfile(args, options)),
   )
 }

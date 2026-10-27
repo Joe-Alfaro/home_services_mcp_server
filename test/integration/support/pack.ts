@@ -63,6 +63,8 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..
 export const PACK_DIR = path.join(REPO_ROOT, 'test/fixtures/pack')
 /** A second, independent invented pack for facts the main pack's hand-computed answers avoid. */
 export const FACTS_PACK_DIR = path.join(REPO_ROOT, 'test/fixtures/facts_pack')
+/** A third invented pack with enough nearby work (182 jobs, 7 trades) to page Q1's job list. */
+export const Q1_PACK_DIR = path.join(REPO_ROOT, 'test/fixtures/q1_pack')
 export const TODAY = '2026-11-02'
 export const NOW = '2026-11-02T06:00:00Z'
 export const READER_ROLE = 'hsmcp_reader'
@@ -126,8 +128,8 @@ export interface Source {
  * the adapter contract: CSV "row:N" is a physical line, ICS "<UID>@<start>" an occurrence of UID,
  * and "<id>#address" a property derived from record <id>.
  */
-export function citationExists(source: Source): boolean {
-  const text = readPackFile(source.sourceFile)
+export function citationExists(source: Source, packDir = PACK_DIR): boolean {
+  const text = readPackFile(source.sourceFile, packDir)
   const id = source.sourceRecordId.replace(/#address$/, '')
   // Account-level records (e.g. a calendar or a log file) may use the file stem as their ID.
   if (source.sourceFile.includes(id)) return true
