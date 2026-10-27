@@ -408,3 +408,15 @@ export function checkCommon(
     checkHouseNumbers(payload, options.allowedHouseNumbers),
   )
 }
+
+/** A default response small enough for a live agent's context; the size is always noted. */
+export function checkResponseSize(bytes: number, maxBytes: number): CheckResult {
+  const kb = (n: number) => `${(n / 1000).toFixed(1)} KB`
+  if (bytes >= maxBytes) {
+    return {
+      failures: [`default response is ${kb(bytes)}, over the ${kb(maxBytes)} budget`],
+      notes: [],
+    }
+  }
+  return { failures: [], notes: [`default response ${kb(bytes)} (budget ${kb(maxBytes)})`] }
+}

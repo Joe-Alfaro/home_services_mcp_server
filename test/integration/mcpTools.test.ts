@@ -19,22 +19,24 @@ import {
  * ./support/pack.ts. "Today" is 2026-11-02 and "now" 2026-11-02T00:00 America/Chicago.
  *
  * Pinned tool inputs (zod; extra optional parameters are fine):
- *   search_job_history_near_address { address, radiusMiles (0 < r <= 5), lastMonths, groupBy: 'trade' }
+ *   search_job_history_near_address { address, radiusMiles (0 < r <= 5), lastMonths, groupBy: 'trade',
+ *                                     limit?, cursor?, trade? }   (paging: q1Summary.test.ts)
  *   find_providers                  { trade (enum of TRADES), workedInZip?, nearZip?,
  *                                     minOpeningMinutes?, window?: 'next_3_days' | 'this_week' | ... }
  *   get_scheduled_work_on_block     { street, blockNumber, zip?, nextDays (1..30) }
- *   get_provider_profile            { providerName | providerId, openingsLimit (1..10) }
+ *   get_provider_profile            { providerName | providerId, openingsLimit (1..10), minMinutes? }
  *   get_property_service_history    { address (non-empty) }
  *   rank_providers_for_job          { trade, service (free text), nearZip (5 digits), window }
  *   get_provider_openings           { providerId, from, to (YYYY-MM-DD local days, to exclusive),
- *                                     minMinutes?, limit? }
+ *                                     minMinutes? (bounded, default 30), limit? }
  *
  * Pinned response fields (each tool's JSON body; extra fields are fine):
  *   Source   = { sourceSystem, sourceFile, sourceRecordId }; every item has `sources: Source[]`.
  *   Provider = { providerId, name } on items as `provider`.
  *   Opening  = { start, end, minutes, confidence: 'high'|'medium'|'low', reasons: string[] }.
  *   Every date-time string is ISO-8601 with a -05:00 or -06:00 offset, never "Z" (R12 e).
- *   Q1 { groups: [{ trade, count, jobs: [{ provider, trade, block, zip, sources }] }] }
+ *   Q1 { total, groups: [{ trade, count, sampleJobs: Job[1..3], sources }], jobs: Job[] (one
+ *        page), nextCursor }   Job = { provider, trade, block, zip, sources }
  *   Q2 { providers: [{ providerId, name, trades, openings: Opening[], sources }] }
  *   Q3 { block, items: [{ kind, status, start, provider, trade, block, zip, sources }] }
  *   Q4 { providerId, name, trades, serviceArea: { declaredZips, observedZips },
@@ -251,15 +253,25 @@ describe('MCP tools on the fixture pack (M2)', () => {
         groups.map((group) => [str(group.trade, 'trade'), num(group.count, 'count')]),
       )
       expect(counts).toEqual({ plumbing: 2, handyman: 2, pest: 1 })
+      expect(body.total).toBe(5)
+      // At most 3 samples per trade, so each of these small groups shows all of its jobs.
       groups.forEach((group) => {
-        expect(arr(group.jobs, 'jobs')).toHaveLength(num(group.count, 'count'))
+        expect(arr(group.sampleJobs, 'sampleJobs')).toHaveLength(num(group.count, 'count'))
       })
     })
 
+    it('lists all five jobs on the first page of the job list', () => {
+      expect(arr(body.jobs, 'jobs')).toHaveLength(5)
+      expect(body.nextCursor).toBeNull()
+    })
+
     it('cites sources and shows block and zip, not other house numbers', () => {
-      const jobs = arr(body.groups, 'groups').flatMap((group) =>
-        arr(obj(group, 'group').jobs, 'jobs'),
-      )
+      const jobs = [
+        ...arr(body.groups, 'groups').flatMap((group) =>
+          arr(obj(group, 'group').sampleJobs, 'sampleJobs'),
+        ),
+        ...arr(body.jobs, 'jobs'),
+      ]
       jobs.forEach((job, index) => {
         sourcesOf(job, `jobs[${String(index)}]`)
         expect(obj(job, 'job').zip).toMatch(/^\d{5}$/)
@@ -272,7 +284,7 @@ describe('MCP tools on the fixture pack (M2)', () => {
       const pest = arr(body.groups, 'groups')
         .map((group) => obj(group, 'group'))
         .find((group) => group.trade === 'pest')
-      const visits = sourcesOf(arr(pest?.jobs, 'pest jobs')[0], 'pest job').map(
+      const visits = sourcesOf(arr(pest?.sampleJobs, 'pest sampleJobs')[0], 'pest job').map(
         (source) => source.sourceRecordId,
       )
       expect(visits).toEqual(expect.arrayContaining(['visit-pvpest-01', 'visit-pvpest-02']))
@@ -562,6 +574,83 @@ describe('MCP tools on the fixture pack (M2)', () => {
         '2026-11-03T08:00:00-06:00/2026-11-03T17:00:00-06:00',
         '2026-11-04T08:00:00-06:00/2026-11-04T17:00:00-06:00',
       ])
+    })
+  })
+
+  describe('R18 b: minMinutes filters openings (bounded, default 30)', () => {
+    async function providerId(name: string): Promise<unknown> {
+      const profile = await answer('get_provider_profile', { providerName: name, openingsLimit: 1 })
+      return profile.providerId
+    }
+
+    function minutesOf(body: Json, key: string): number[] {
+      return arr(body[key], key).map((o, i) =>
+        num(expectOpening(o, `${key}[${String(i)}]`).minutes, 'minutes'),
+      )
+    }
+
+    it('get_provider_openings: keeps only openings of at least minMinutes', async () => {
+      // Bishop Arts Handyman's longest gap in [11-02, 11-05) is 90 minutes.
+      const id = await providerId('Bishop Arts Handyman')
+      const window = { providerId: id, from: '2026-11-02', to: '2026-11-05', limit: 50 }
+      const sixty = minutesOf(
+        await answer('get_provider_openings', { ...window, minMinutes: 60 }),
+        'openings',
+      )
+      expect(sixty.length).toBeGreaterThan(0)
+      sixty.forEach((m) => {
+        expect(m).toBeGreaterThanOrEqual(60)
+        expect(m).toBeLessThanOrEqual(90)
+      })
+      const twoHours = await answer('get_provider_openings', { ...window, minMinutes: 120 })
+      expect(arr(twoHours.openings, 'openings')).toEqual([])
+    })
+
+    it('get_provider_openings: defaults minMinutes to 30', async () => {
+      const id = await providerId('Bishop Arts Handyman')
+      const body = await answer('get_provider_openings', {
+        providerId: id,
+        from: '2026-11-02',
+        to: '2026-11-05',
+        limit: 50,
+      })
+      expect(body.minMinutes).toBe(30)
+      minutesOf(body, 'openings').forEach((m) => {
+        expect(m).toBeGreaterThanOrEqual(30)
+      })
+    })
+
+    it('get_provider_profile: minMinutes skips shorter next openings', async () => {
+      const body = await answer('get_provider_profile', {
+        providerName: 'Pecan Valley Plumbing',
+        openingsLimit: 3,
+        minMinutes: 360,
+      })
+      const openings = arr(body.nextOpenings, 'nextOpenings').map((o, i) =>
+        expectOpening(o, `nextOpenings[${String(i)}]`),
+      )
+      expect(openings.map(span)).not.toContain(
+        '2026-11-02T12:00:00-06:00/2026-11-02T17:00:00-06:00',
+      )
+      expect(openings[0] === undefined ? undefined : span(openings[0])).toBe(
+        '2026-11-03T08:00:00-06:00/2026-11-03T17:00:00-06:00',
+      )
+      openings.forEach((opening) => {
+        expect(num(opening.minutes, 'minutes')).toBeGreaterThanOrEqual(360)
+      })
+    })
+
+    it.each([
+      ['get_provider_openings', { from: '2026-11-02', to: '2026-11-05', minMinutes: 5000 }],
+      ['get_provider_openings', { from: '2026-11-02', to: '2026-11-05', minMinutes: -15 }],
+      ['get_provider_profile', { openingsLimit: 3, minMinutes: 5000 }],
+      ['get_provider_profile', { openingsLimit: 3, minMinutes: -15 }],
+    ] as const)('%s rejects out-of-range minMinutes %j naming the field', async (name, args) => {
+      const id = await providerId('Pecan Valley Plumbing')
+      const result = await mcp().call(name, { providerId: id, ...args })
+      expect(result.isError).toBe(true)
+      expect(result.raw).toMatch(/minMinutes/)
+      expect(result.raw).toMatch(/\d+\s*(-|to)\s*\d+|at most \d+|at least \d+/)
     })
   })
 

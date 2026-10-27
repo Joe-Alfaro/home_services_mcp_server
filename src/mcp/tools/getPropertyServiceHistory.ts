@@ -109,6 +109,7 @@ export function registerGetPropertyServiceHistory(server: McpServer, options: Se
       inputSchema: propertyHistoryInput,
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
-    (args) => respond(() => getPropertyServiceHistory(args, options)),
+    (args) =>
+      respond('get_property_service_history', () => getPropertyServiceHistory(args, options)),
   )
 }

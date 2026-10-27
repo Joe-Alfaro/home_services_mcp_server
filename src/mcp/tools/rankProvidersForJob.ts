@@ -391,6 +391,6 @@ export function registerRankProvidersForJob(server: McpServer, options: ServerOp
       inputSchema: rankProvidersInput,
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
-    (args) => respond(() => rankProvidersForJob(args, options)),
+    (args) => respond('rank_providers_for_job', () => rankProvidersForJob(args, options)),
   )
 }

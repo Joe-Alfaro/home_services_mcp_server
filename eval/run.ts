@@ -2,14 +2,16 @@
  * Eval harness (R29): starts the MCP server over stdio as a child process, asks Q1-Q6 through the
  * one intended tool each (R18 d: one call, no retries, no LLM), compares every response with
  * eval/expected/qN.json and prints per-question PASS/FAIL plus the pass rate. Exits 1 when any
- * question fails.
+ * question fails. A question may also cap the answer's size and read a paged list to the end
+ * with follow-up calls (Q1's job list).
  */
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
-import { isObject, type Json } from './checks/common.ts'
+import { checkResponseSize, isObject, merge, type Json } from './checks/common.ts'
+import { collectPages } from './paging.ts'
 import { buildQuestions, type Question } from './questions.ts'
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -126,6 +128,26 @@ export function payloadOf(result: Record<string, unknown>): Json {
   }
 }
 
+/** Bytes the client received as the answer: the text block, else the structured content. */
+function responseBytes(result: Record<string, unknown>): number {
+  return Buffer.byteLength(textOf(result) ?? JSON.stringify(result.structuredContent ?? null))
+}
+
+/** One follow-up call whose answer must be a successful JSON body. */
+async function callForPayload(
+  client: Client,
+  tool: string,
+  args: Record<string, unknown>,
+): Promise<Json> {
+  const result = await client.callTool({ name: tool, arguments: args }, undefined, {
+    timeout: CALL_TIMEOUT_MS,
+  })
+  if (result.isError === true) {
+    throw new Error(`tool returned an error: ${(textOf(result) ?? '').slice(0, 300)}`)
+  }
+  return payloadOf(result)
+}
+
 function fail(question: Question, started: number, message: string): Outcome {
   return { question, pass: false, failures: [message], notes: [], ms: Date.now() - started }
 }
@@ -157,7 +179,22 @@ async function ask(client: Client, question: Question, tools: Set<string>): Prom
   } catch (error) {
     return fail(question, started, errorText(error))
   }
-  const { failures, notes } = question.check(payload)
+  const checks = [question.check(payload)]
+  if (question.maxResponseBytes !== undefined) {
+    checks.push(checkResponseSize(responseBytes(result), question.maxResponseBytes))
+  }
+  if (question.pages !== undefined) {
+    const spec = question.pages
+    const paged = await collectPages((args) => callForPayload(client, question.tool, args), spec)
+    checks.push(
+      {
+        failures: paged.failures,
+        notes: [`read ${String(paged.pages)} pages of ${spec.itemsKey}`],
+      },
+      spec.check(payload, paged.items),
+    )
+  }
+  const { failures, notes } = merge(...checks)
   return { question, pass: failures.length === 0, failures, notes, ms: Date.now() - started }
 }
 
@@ -179,7 +216,9 @@ function report(outcome: Outcome): void {
 
 async function main(): Promise<number> {
   const questions = buildQuestions()
-  console.log('eval: Q1-Q6 against the MCP server over stdio (one call per question, no retries)')
+  console.log(
+    'eval: Q1-Q6 against the MCP server over stdio (one call per question, no retries; Q1 then pages its job list)',
+  )
   const connection = await connect()
   const outcomes: Outcome[] = []
   if ('error' in connection) {
