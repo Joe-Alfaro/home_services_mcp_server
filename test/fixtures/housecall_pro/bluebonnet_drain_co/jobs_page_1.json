@@ -1,0 +1,118 @@
+{
+  "page": 1,
+  "page_size": 3,
+  "total_pages": 2,
+  "total_items": 6,
+  "jobs": [
+    {
+      "id": "job_00000000000000000000000000000d01",
+      "invoice_number": "2101",
+      "description": "replace water heater 50 gal",
+      "customer": {
+        "id": "cus_00000000000000000000000000000c01",
+        "first_name": "Theo",
+        "last_name": "Marchetti",
+        "email": "theo.m@example.net",
+        "mobile_number": "972-555-0131"
+      },
+      "address": {
+        "id": "adr_00000000000000000000000000000a01",
+        "street": "5827 Belmont Ave",
+        "street_line_2": null,
+        "city": "Dallas",
+        "state": "TX",
+        "zip": "75206"
+      },
+      "work_status": "complete rated",
+      "schedule": {
+        "scheduled_start": "2026-10-31T09:00:00",
+        "scheduled_end": "2026-10-31T12:00:00",
+        "arrival_window": 60
+      },
+      "work_timestamps": {
+        "on_my_way_at": "2026-10-31T08:40:00",
+        "started_at": "2026-10-31T09:05:00",
+        "completed_at": "2026-10-31T11:50:00"
+      },
+      "total_amount": 28500,
+      "outstanding_balance": 0,
+      "assigned_employees": [{ "first_name": "Lyle", "last_name": "Crandall" }],
+      "tags": ["repeat"],
+      "original_estimate_id": "est_00000000000000000000000000000e02",
+      "notes": null,
+      "created_at": "2026-10-20T15:00:00Z"
+    },
+    {
+      "id": "job_00000000000000000000000000000d02",
+      "invoice_number": "2102",
+      "description": "emergency burst pipe",
+      "customer": {
+        "id": "cus_00000000000000000000000000000c02",
+        "first_name": "Priya",
+        "last_name": "Okonkwo",
+        "email": null,
+        "mobile_number": "(214) 555-0158"
+      },
+      "address": {
+        "id": "adr_00000000000000000000000000000a02",
+        "street": "4533 LIVE OAK ST",
+        "street_line_2": "Apt. 4",
+        "city": null,
+        "state": "TX",
+        "zip": "75204"
+      },
+      "work_status": "complete unrated",
+      "schedule": {
+        "scheduled_start": "2026-11-01T01:30:00",
+        "scheduled_end": "2026-11-01T03:00:00",
+        "arrival_window": 0
+      },
+      "work_timestamps": {
+        "on_my_way_at": "2026-11-01T01:10:00",
+        "started_at": "2026-11-01T01:35:00",
+        "completed_at": "2026-11-01T02:55:00"
+      },
+      "total_amount": 45000,
+      "outstanding_balance": 0,
+      "assigned_employees": [{ "first_name": "Lyle", "last_name": "Crandall" }],
+      "tags": ["priority"],
+      "original_estimate_id": null,
+      "notes": null,
+      "created_at": "2026-11-01T06:15:00Z"
+    },
+    {
+      "id": "job_00000000000000000000000000000d03",
+      "invoice_number": "2103",
+      "description": "install garbage disposal",
+      "customer": {
+        "id": "cus_00000000000000000000000000000c03",
+        "first_name": "Gunnar",
+        "last_name": "Ashby",
+        "email": "gashby@example.com",
+        "mobile_number": "4695550166"
+      },
+      "address": {
+        "id": "adr_00000000000000000000000000000a03",
+        "street": "5809 Belmont Avenue",
+        "street_line_2": null,
+        "city": "dallas",
+        "state": "TX",
+        "zip": "75206"
+      },
+      "work_status": "scheduled",
+      "schedule": {
+        "scheduled_start": "2026-12-02T12:15:00",
+        "scheduled_end": "2026-12-02T14:15:00",
+        "arrival_window": 120
+      },
+      "work_timestamps": { "on_my_way_at": null, "started_at": null, "completed_at": null },
+      "total_amount": 32000,
+      "outstanding_balance": 32000,
+      "assigned_employees": [{ "first_name": "Lyle", "last_name": "Crandall" }],
+      "tags": ["referral"],
+      "original_estimate_id": null,
+      "notes": "Rescheduled from 11/30 per customer",
+      "created_at": "2026-10-26T17:00:00Z"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "page": 2,
+  "page_size": 2,
+  "total_pages": 2,
+  "total_items": 3,
+  "customers": [
+    {
+      "id": "cus_00000000000000000000000000000c03",
+      "first_name": "Gunnar",
+      "last_name": "Ashby",
+      "email": "gashby@example.com",
+      "mobile_number": "4695550166",
+      "company": null,
+      "created_at": "2026-03-09T14:30:00Z",
+      "addresses": [
+        {
+          "id": "adr_00000000000000000000000000000a03",
+          "type": "service",
+          "street": "5809 Belmont Avenue",
+          "street_line_2": null,
+          "city": "dallas",
+          "state": "TX",
+          "zip": "75206",
+          "country": "US"
+        },
+        {
+          "id": "adr_00000000000000000000000000000a04",
+          "type": "service",
+          "street": "4590 Live Oak Street",
+          "street_line_2": null,
+          "city": "Dallas",
+          "state": "TX",
+          "zip": "75204-3311",
+          "country": "US"
+        }
+      ]
+    }
+  ]
+}
