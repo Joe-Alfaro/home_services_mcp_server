@@ -7,8 +7,9 @@
  *   export interface DeclaredHoursCandidate {
  *     …
  *     // True for "24/7"-style hours (parseDeclaredHours().alwaysOpen). The engine then treats
- *     // the provider as having no reliable declared hours.
- *     alwaysOpen: boolean
+ *     // the provider as having no reliable declared hours. Optional in the type so hand-built
+ *     // candidates in other tests still compile; the profiles adapter always sets it.
+ *     alwaysOpen?: boolean
  *   }
  */
 import { describe, expect, it } from 'vitest'

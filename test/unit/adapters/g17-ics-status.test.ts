@@ -8,8 +8,9 @@
  *   export interface CalendarBlockCandidate {
  *     …
  *     // ICS STATUS, lower-cased; an event without STATUS is 'confirmed'. The values are the
- *     // matching BusyStatus values in src/availability/engine.ts.
- *     status: 'confirmed' | 'tentative' | 'cancelled'
+ *     // matching BusyStatus values in src/availability/engine.ts. Optional in the type so
+ *     // hand-built candidates in other tests still compile; the ICS adapter always sets it.
+ *     status?: 'confirmed' | 'tentative' | 'cancelled'
  *   }
  */
 import { describe, expect, it } from 'vitest'

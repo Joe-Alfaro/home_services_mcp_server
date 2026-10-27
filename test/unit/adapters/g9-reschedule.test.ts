@@ -14,7 +14,9 @@
  *   // src/adapters/types.ts
  *   export interface JobCandidate {
  *     …
- *     rescheduledFrom: LocalDate | null // parsed from rescheduleNote with the job's local date
+ *     // Parsed from rescheduleNote with the job's local date. Optional in the type so hand-built
+ *     // candidates in other tests still compile; every adapter sets it (null when none).
+ *     rescheduledFrom?: LocalDate | null
  *   }
  */
 import { describe, expect, it } from 'vitest'
