@@ -19,8 +19,12 @@ export const ZONE = 'America/Chicago'
 export const CONFIDENCE_LEVELS = ['high', 'medium', 'low']
 
 // Arrays under these keys are not "response items" for R19: they are provenance itself,
-// free-text reasons, names, or availability openings (which carry confidence and reasons, R13).
-const SOURCE_EXEMPT_KEYS = new Set(['sources', 'reasons', 'openings', 'aliases'])
+// free-text reasons, names, availability openings (which carry confidence and reasons, R13), or
+// Q1 byTrade rows, which are pure { trade, count } aggregates of groups (D-142).
+const SOURCE_EXEMPT_KEYS = new Set(['sources', 'reasons', 'openings', 'aliases', 'byTrade'])
+// Identifier keys (id, ids, *Id, *Ids) hold stored IDs verbatim, e.g. an ICS occurrence ID
+// '<uid>@2026-10-20T18:15:00Z' (D-141, D-144); they are not times to localize.
+const ID_KEY = /^(?:id|ids|.+Id|.+Ids)$/
 const HOUSE_NUMBER_KEYS = new Set(['housenumber', 'streetnumber', 'addressnumber'])
 const STREET_SUFFIXES =
   'St|Street|Ave|Avenue|Dr|Drive|Rd|Road|Blvd|Boulevard|Ln|Lane|Pkwy|Parkway|Ct|Court|Pl|Place|Cir|Circle|Trl|Trail'
@@ -349,10 +353,15 @@ export function checkNoPii(payload: Json): CheckResult {
   return { failures: capped('R17 PII pattern', hits), notes: [] }
 }
 
-/** R12(e): every date-time carries the America/Chicago offset in force at that instant. */
+/**
+ * R12(e): every date-time carries the America/Chicago offset in force at that instant. Values
+ * under identifier keys are stored IDs, not times, and must stay exactly as stored (D-141).
+ */
 export function checkTimeOffsets(payload: Json): CheckResult {
   const bad: string[] = []
-  collectStrings(payload).forEach(({ path, value }) => {
+  walk(payload, (value, path, key) => {
+    if (key !== undefined && ID_KEY.test(key)) return false
+    if (typeof value !== 'string') return true
     ;[...value.matchAll(ISO_DATETIME)].forEach((m) => {
       const offset = m[1]
       if (offset !== '-05:00' && offset !== '-06:00') {
@@ -365,6 +374,7 @@ export function checkTimeOffsets(payload: Json): CheckResult {
         bad.push(`${path} "${m[0]}" (Chicago offset at that instant is ${expectedOffset})`)
       }
     })
+    return true
   })
   return { failures: capped('R12 time without the Chicago offset', bad), notes: [] }
 }
