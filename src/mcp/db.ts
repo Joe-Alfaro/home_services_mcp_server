@@ -199,9 +199,14 @@ export async function loadJobs(
             j.service, j.start_at, j.end_at, j.completed_at, j.all_day, j.description,
             j.duplicate_count, j.confidence, j.block_number, j.block_label, j.street_name,
             j.street_type, j.zip, j.lat, j.lon, j.source_systems, j.sources,
-            ps.sources AS parent_sources
+            -- Correlated, not a join on v_entity_sources: that aggregates every entity (Q1 50 s).
+            (SELECT jsonb_agg(jsonb_build_object('sourceSystem', s.source_system,
+                      'sourceFile', s.source_file, 'sourceRecordId', s.source_record_id)
+                      ORDER BY s.source_system, s.source_file, s.source_record_id)
+               FROM v_sources s
+              WHERE s.entity = 'job' AND s.entity_id = j.parent_job_id
+                AND s.method <> 'account_record') AS parent_sources
        FROM v_jobs j
-       LEFT JOIN v_entity_sources ps ON ps.entity = 'job' AND ps.entity_id = j.parent_job_id
       WHERE (${where}) AND ${NOT_VISIT_PARENT}
       ORDER BY j.start_at NULLS LAST, j.id`,
     [...params],
