@@ -61,6 +61,8 @@ export interface BusyItem {
   busy: boolean
   /** Upstream confidence, e.g. 'low' for a CSV-only future row. */
   confidence: Confidence
+  /** Why the upstream confidence is below 'high', e.g. a booking only the CSV log records (G18). */
+  reasons?: string[]
   /** One per merged source record. */
   sources: SourceCitation[]
   /** Evidence only; the old slot never blocks. */

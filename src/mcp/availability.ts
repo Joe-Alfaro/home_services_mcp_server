@@ -82,14 +82,31 @@ function iso(value: Date | null): string | null {
   return value === null ? null : value.toISOString()
 }
 
+/** Systems that do not confirm a booking on their own: the hand-kept log and its calendar. */
+const NON_CRM_SYSTEMS = new Set(['spreadsheet', 'ics'])
+
+const CSV_ONLY_REASON =
+  'booking recorded only in the CSV job log (not confirmed by a CRM or calendar; blocks, cautious)'
+
 /**
- * A CSV row is a hand-kept log: a booking only it records still blocks, but at low confidence
- * (G18); a calendar event that mirrors it corroborates it to medium (D-041). CRM work is high.
+ * Confidence of a booking (G18, D-143). CRM work is high. A CSV row is a hand-kept log: one that
+ * only the log records still blocks, at low with a reason. A calendar event that mirrors it
+ * confirms it, so it blocks at that event's confidence: a tentative mirror makes the booking a
+ * tentative hold (low, G17), a confirmed one high.
  */
-function workConfidence(row: WorkRow, mirrors: readonly BlockRow[]): Confidence {
-  const csvOnly = row.source_systems.length === 1 && row.source_systems[0] === 'spreadsheet'
-  if (!csvOnly) return 'high'
-  return mirrors.length === 0 ? 'low' : 'medium'
+function workConfidence(
+  row: WorkRow,
+  mirrors: readonly BlockRow[],
+): Pick<BusyItem, 'status' | 'confidence' | 'reasons'> {
+  const crm = row.source_systems.some((system) => !NON_CRM_SYSTEMS.has(system))
+  if (crm) return { status: row.status, confidence: 'high' }
+  const csvOnly = row.source_systems.every((system) => system === 'spreadsheet')
+  if (csvOnly && mirrors.length === 0) {
+    return { status: row.status, confidence: 'low', reasons: [CSV_ONLY_REASON] }
+  }
+  const tentative = mirrors.some((mirror) => mirror.status === 'tentative')
+  const blocking = row.status !== 'cancelled' && row.status !== 'completed'
+  return { status: tentative && blocking ? 'tentative' : row.status, confidence: 'high' }
 }
 
 function earliest(a: Date | null, b: Date): Date {
@@ -109,12 +126,11 @@ function workBusy(row: WorkRow, mirrors: readonly BlockRow[]): BusyItem {
   const endAt = mirrors.reduce((at, block) => latest(at, block.end_at), row.end_at)
   return {
     kind: row.kind,
-    status: row.status,
     startAt: iso(startAt),
     endAt: iso(endAt),
     allDay: row.all_day,
     busy: true,
-    confidence: workConfidence(row, mirrors),
+    ...workConfidence(row, mirrors),
     sources: mergeSources(readSources(row.sources), ...mirrors.map((m) => readSources(m.sources))),
     category: 'work',
     rescheduledFrom: row.rescheduled_from,

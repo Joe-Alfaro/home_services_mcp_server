@@ -1,0 +1,18 @@
+{
+  "exported_at": "2026-11-02",
+  "providers": [
+    {
+      "profile_id": "pf_401",
+      "business_name": "Hollis Creek Handyman",
+      "owner_name": "Marguerite Anwell",
+      "phone": "214-555-0410",
+      "email": "marguerite@holliscreek.example.com",
+      "trades": ["handyman"],
+      "does_not_do": [],
+      "service_zips": ["75214"],
+      "hours": "Mon-Fri 8am-5pm",
+      "crew_size": 1,
+      "crm": "Google Sheets"
+    }
+  ]
+}

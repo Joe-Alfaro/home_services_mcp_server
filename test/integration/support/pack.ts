@@ -65,6 +65,8 @@ export const PACK_DIR = path.join(REPO_ROOT, 'test/fixtures/pack')
 export const FACTS_PACK_DIR = path.join(REPO_ROOT, 'test/fixtures/facts_pack')
 /** A third invented pack with enough nearby work (182 jobs, 7 trades) to page Q1's job list. */
 export const Q1_PACK_DIR = path.join(REPO_ROOT, 'test/fixtures/q1_pack')
+/** A fourth invented pack: one provider's CSV log and calendar, for R19 and G18 (tracePack.test.ts). */
+export const TRACE_PACK_DIR = path.join(REPO_ROOT, 'test/fixtures/trace_pack')
 export const TODAY = '2026-11-02'
 export const NOW = '2026-11-02T06:00:00Z'
 export const READER_ROLE = 'hsmcp_reader'
