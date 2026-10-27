@@ -22,13 +22,22 @@ export interface ParsedAddress {
 }
 
 export type StreetMatch =
-  | { status: 'exact' | 'fuzzy'; streetName: string; streetType: string; confidence: number }
+  | {
+      status: 'exact' | 'fuzzy'
+      streetName: string
+      streetType: string
+      confidence: number
+      /** Edits from the given street to the matched one (0 when exact). */
+      editDistance: number
+    }
   | { status: 'none' | 'ambiguous'; streetName: null; streetType: null; confidence: 0 }
 
 export interface NormalizedAddress extends ParsedAddress {
   key: string
   zipInferred: boolean
   streetMatch: StreetMatch['status']
+  /** Edits between the given and the matched reference street; null when nothing matched. */
+  streetEditDistance: number | null
   /** 1 = structured, exact street, own zip; lower when anything was guessed. */
   confidence: number
   blockNumber: number | null
@@ -39,6 +48,11 @@ export interface NormalizedAddress extends ParsedAddress {
 /** Confidence of a free-text address and of an inferred zip (ARCHITECTURE "Resolution methods"). */
 export const FREE_TEXT_CONFIDENCE = 0.8
 export const INFERRED_ZIP_CONFIDENCE = 0.85
+/** A street matched to the reference by edit distance (D-043, R8 c). */
+export const FUZZY_STREET_CONFIDENCE: Readonly<{ oneEdit: number; twoEdits: number }> = {
+  oneEdit: 0.9,
+  twoEdits: 0.8,
+}
 
 const STREET_TYPES: Readonly<Record<string, string>> = {
   st: 'St',
@@ -346,7 +360,9 @@ export function matchStreet(
   )
   const [onlyExact] = exact
   if (exact.length > 1) return { status: 'ambiguous', ...NO_MATCH }
-  if (onlyExact !== undefined) return { status: 'exact', ...onlyExact, confidence: 1 }
+  if (onlyExact !== undefined) {
+    return { status: 'exact', ...onlyExact, confidence: 1, editDistance: 0 }
+  }
   if (name.length < MIN_FUZZY_LENGTH) return { status: 'none', ...NO_MATCH }
 
   // A wrong street type counts as one more edit.
@@ -364,7 +380,12 @@ export function matchStreet(
   const closest = scored.filter((entry) => entry.distance === best)
   const [winner] = closest
   if (closest.length > 1 || winner === undefined) return { status: 'ambiguous', ...NO_MATCH }
-  return { status: 'fuzzy', ...winner.street, confidence: best === 1 ? 0.9 : 0.8 }
+  return {
+    status: 'fuzzy',
+    ...winner.street,
+    confidence: best === 1 ? FUZZY_STREET_CONFIDENCE.oneEdit : FUZZY_STREET_CONFIDENCE.twoEdits,
+    editDistance: best,
+  }
 }
 
 /**
@@ -384,11 +405,13 @@ export function normalizeAddress(raw: RawAddress, index: StreetIndex): Normalize
   let { streetName, streetType, zip } = parsed
   let zipInferred = false
   let streetMatch: StreetMatch['status'] = 'none'
+  let streetEditDistance: number | null = null
   const zipInReference = zip === null || index.targetZips.has(zip)
   if (streetName !== null && zipInReference) {
     const match = matchStreet(streetName, streetType, zip, index)
     streetMatch = match.status
     if (match.status === 'exact' || match.status === 'fuzzy') {
+      streetEditDistance = match.editDistance
       streetName = match.streetName
       streetType = match.streetType
       if (match.status === 'fuzzy') {
@@ -430,6 +453,7 @@ export function normalizeAddress(raw: RawAddress, index: StreetIndex): Normalize
     key: addressKey(normalized),
     zipInferred,
     streetMatch,
+    streetEditDistance,
     confidence: Math.min(...confidences),
     blockNumber,
     blockLabel:

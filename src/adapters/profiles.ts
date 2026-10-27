@@ -106,6 +106,7 @@ function parseFile(file: SourceFile, ctx: AdapterContext): CandidateBatch {
         hoursRaw: typeof rawHours === 'string' ? rawHours : JSON.stringify(rawHours ?? null),
         weekly: hours.weekly,
         parsed: hours.parsed,
+        alwaysOpen: hours.alwaysOpen,
       }
       return [[provider, declared]]
     })
