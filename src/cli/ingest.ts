@@ -1,55 +1,34 @@
 import { existsSync } from 'node:fs'
-import pg from 'pg'
-import { adapters } from '../adapters/registry.ts'
-import type { AdapterContext, SourceSystem } from '../adapters/types.ts'
-import { ingestTimestamp, loadConfig, TIME_ZONE } from '../config.ts'
-import { writeIngest } from '../db/ingest.ts'
-import { claimedBy, listSourcePaths, readSourceFiles } from '../ingest/files.ts'
-import { formatSummary, runAdapters, summarize } from '../ingest/run.ts'
+import { ingestTimestamp, loadConfig } from '../config.ts'
+import { runPipeline } from '../ingest/pipeline.ts'
+import { formatSummary } from '../ingest/run.ts'
 
-// ICS expansion window around "today" (ARCHITECTURE adapter contract defaults).
-const HISTORY_DAYS = 731
-const HORIZON_DAYS = 31
-
+// `npm run ingest` (and `npm run setup` after `docker compose up`): the whole pipeline (R22).
 const config = loadConfig()
 if (!existsSync(config.dataPackDir)) {
   console.error(`ingest: data pack not found at ${config.dataPackDir} (set DATA_PACK_DIR)`)
   process.exit(1)
 }
 
-const ctx: AdapterContext = {
+const result = await runPipeline({
   dataPackDir: config.dataPackDir,
-  // Provenance timestamp of this run; "today" and "now" come from config, never the clock.
-  ingestedAt: ingestTimestamp(),
+  databaseUrl: config.databaseUrl,
   today: config.today,
   now: config.now,
-  timeZone: TIME_ZONE,
-  historyDays: HISTORY_DAYS,
-  horizonDays: HORIZON_DAYS,
+  // Provenance timestamp of this run; "today" and "now" come from config, never the clock (R14).
+  ingestedAt: ingestTimestamp(),
+})
+
+function formatCounts(counts: Record<string, number>): string {
+  return Object.entries(counts)
+    .map(([key, count]) => `${key} ${String(count)}`)
+    .join(', ')
 }
 
-const paths = listSourcePaths(config.dataPackDir)
-const claimed = new Map<SourceSystem, string[]>(
-  adapters.map((adapter) => [adapter.sourceSystem, claimedBy(adapter, paths)]),
-)
-const claimedPaths = new Set([...claimed.values()].flat())
-const unclaimed = paths.filter((filePath) => !claimedPaths.has(filePath))
-
-const results = runAdapters(
-  adapters,
-  claimed,
-  (files) => readSourceFiles(config.dataPackDir, files),
-  ctx,
-)
-const summary = summarize(results, unclaimed)
-
-const client = new pg.Client({ connectionString: config.databaseUrl })
-await client.connect()
-try {
-  const runId = await writeIngest(client, ctx, results, summary)
-  console.log(`ingest: run ${String(runId)} from ${config.dataPackDir}`)
-  console.log(formatSummary(summary))
-} finally {
-  await client.end()
-}
-if (summary.totals.errors > 0) process.exitCode = 1
+console.log(`ingest: run ${String(result.runId)} from ${config.dataPackDir}`)
+console.log(formatSummary(result.summary))
+console.log(`canonical: ${formatCounts(result.canonical)}`)
+Object.entries(result.linksByMethod).forEach(([table, counts]) => {
+  console.log(`  ${table} by method: ${formatCounts(counts)}`)
+})
+if (result.summary.totals.errors > 0) process.exitCode = 1
