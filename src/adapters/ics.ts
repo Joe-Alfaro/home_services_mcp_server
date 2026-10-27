@@ -8,6 +8,7 @@ import type {
   CandidateBatch,
   IngestIssue,
   ProviderCandidate,
+  RawAddress,
   SourceAdapter,
   SourceFile,
   SourceRef,
@@ -281,6 +282,17 @@ function parseFile(file: SourceFile, ctx: AdapterContext): CandidateBatch {
     // D-036: CXL prefix, CANCELLED and TRANSPARENT never block time; TENTATIVE does.
     const cancelledJob = summary !== null && /^cxl\b/i.test(summary)
     const busy = !(transparent || status === 'CANCELLED' || cancelledJob)
+    // G17, D-079: the engine's BusyStatus vocabulary; a missing or unknown STATUS is confirmed.
+    const blockStatus =
+      status === 'TENTATIVE' ? 'tentative' : status === 'CANCELLED' ? 'cancelled' : 'confirmed'
+    const locationProperty = get('LOCATION')
+    const locationText =
+      locationProperty === undefined ? null : unescapeText(locationProperty.value).trim() || null
+    // G18, D-085: kept as free text; the pipeline maps it to a property.
+    const location: RawAddress | null =
+      locationText === null
+        ? null
+        : { line1: null, line2: null, city: null, state: null, zip: null, freeText: locationText }
 
     const rruleProperty = get('RRULE')
     const rule = rruleProperty === undefined ? null : parseRule(rruleProperty.value)
@@ -331,8 +343,10 @@ function parseFile(file: SourceFile, ctx: AdapterContext): CandidateBatch {
             allDay: start.allDay,
             timeBasis: start.basis,
             busy,
+            status: blockStatus,
             category: cancelledJob ? 'work' : categoryOf(summary),
             summaryRaw: summary,
+            location,
             recurrence:
               rule === null || rruleProperty === undefined
                 ? null
