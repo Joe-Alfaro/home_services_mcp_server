@@ -95,6 +95,8 @@ export interface Job {
   providerName: string
   /** Visits of one CRM A job share it; otherwise the job's own id (Q1 counts services). */
   serviceKey: string
+  /** G6: a visit's parent CRM job record(s), so a counted job cites its own id (R19). */
+  parentSources: Source[]
   kind: 'job' | 'visit' | 'estimate'
   status: string
   trade: string | null
@@ -121,7 +123,7 @@ interface JobRow {
   id: string
   provider_id: string
   provider_name: string
-  parent_key: string | null
+  parent_job_id: string | null
   kind: Job['kind']
   status: string
   trade: string | null
@@ -142,6 +144,7 @@ interface JobRow {
   lon: number | null
   source_systems: string[]
   sources: unknown
+  parent_sources: unknown
 }
 
 function toJob(row: JobRow): Job {
@@ -149,7 +152,7 @@ function toJob(row: JobRow): Job {
     id: row.id,
     providerId: row.provider_id,
     providerName: row.provider_name,
-    serviceKey: row.parent_key ?? row.id,
+    serviceKey: row.parent_job_id ?? row.id,
     kind: row.kind,
     status: row.status,
     trade: row.trade,
@@ -170,11 +173,20 @@ function toJob(row: JobRow): Job {
     lon: row.lon,
     sourceSystems: row.source_systems,
     sources: readSources(row.sources),
+    parentSources: row.parent_sources === null ? [] : readSources(row.parent_sources),
   }
 }
 
 /**
- * Jobs matching a WHERE clause over v_jobs (aliased `j`). Callers pass only fixed SQL plus
+ * G6: a CRM A job with visits is a container. Its visits carry the time, status and money and
+ * point at it (serviceKey), so the tools count and show the visits, never the container. Expects
+ * v_jobs aliased `j`.
+ */
+export const NOT_VISIT_PARENT =
+  'NOT EXISTS (SELECT 1 FROM v_job_parents c WHERE c.parent_key = j.id)'
+
+/**
+ * Jobs matching a WHERE clause over v_jobs (aliased `j`), visit parents left out. Callers pass only fixed SQL plus
  * positional parameters.
  */
 export async function loadJobs(
@@ -183,13 +195,19 @@ export async function loadJobs(
   params: readonly unknown[],
 ): Promise<Job[]> {
   const { rows } = await pool.query<JobRow>(
-    `SELECT j.id, j.provider_id, j.provider_name, p.parent_key, j.kind, j.status, j.trade,
+    `SELECT j.id, j.provider_id, j.provider_name, j.parent_job_id, j.kind, j.status, j.trade,
             j.service, j.start_at, j.end_at, j.completed_at, j.all_day, j.description,
             j.duplicate_count, j.confidence, j.block_number, j.block_label, j.street_name,
-            j.street_type, j.zip, j.lat, j.lon, j.source_systems, j.sources
+            j.street_type, j.zip, j.lat, j.lon, j.source_systems, j.sources,
+            -- Correlated, not a join on v_entity_sources: that aggregates every entity (Q1 50 s).
+            (SELECT jsonb_agg(jsonb_build_object('sourceSystem', s.source_system,
+                      'sourceFile', s.source_file, 'sourceRecordId', s.source_record_id)
+                      ORDER BY s.source_system, s.source_file, s.source_record_id)
+               FROM v_sources s
+              WHERE s.entity = 'job' AND s.entity_id = j.parent_job_id
+                AND s.method <> 'account_record') AS parent_sources
        FROM v_jobs j
-       LEFT JOIN v_job_parents p ON p.job_id = j.id
-      WHERE ${where}
+      WHERE (${where}) AND ${NOT_VISIT_PARENT}
       ORDER BY j.start_at NULLS LAST, j.id`,
     [...params],
   )

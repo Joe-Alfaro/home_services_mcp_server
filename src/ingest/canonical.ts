@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { DateTime } from 'luxon'
 import type {
   CalendarBlockCandidate,
   Candidate,
@@ -58,7 +59,7 @@ export interface ProviderRow {
 
 export interface ProviderConflictRow {
   providerId: string
-  kind: 'service_area' | 'trade' | 'crm'
+  kind: 'hours' | 'service_area' | 'trade' | 'crm'
   detail: Record<string, unknown>
   records: RecordKey[]
 }
@@ -171,6 +172,15 @@ export interface CanonicalModel {
 /** provider_links method for a job record tied to its provider through its account. */
 export const ACCOUNT_RECORD_METHOD = 'account_record'
 
+const TIME_ZONE = 'America/Chicago'
+
+/** Booked work: what a provider was actually there for (cancelled and undated work never is). */
+const BOOKED_STATUSES: ReadonlySet<JobRow['status']> = new Set([
+  'completed',
+  'scheduled',
+  'in_progress',
+])
+
 const CRM_SYSTEMS: ReadonlyArray<[SourceSystem, RegExp]> = [
   ['jobber', /jobber/i],
   ['housecall_pro', /housecall|\bhcp\b/i],
@@ -262,6 +272,74 @@ function crmConflict(
           .filter((candidate) => undeclared.includes(candidate.ref.sourceSystem))
           .map((candidate) => recordKeyOf(candidate.ref, 'provider')),
       ],
+    },
+  ]
+}
+
+function minutesOf(time: string): number {
+  const [hours = 0, minutes = 0] = time.split(':').map(Number)
+  return hours * 60 + minutes
+}
+
+/**
+ * True when the booking's local span fits inside one declared window of its local weekday. A
+ * booking without an end is judged by its start alone.
+ */
+function withinDeclaredHours(job: JobRow, hours: DeclaredHoursCandidate): boolean {
+  const start = DateTime.fromISO(job.startAt ?? '', { zone: 'utc' }).setZone(TIME_ZONE)
+  const startMinutes = start.hour * 60 + start.minute
+  const lengthMinutes =
+    job.endAt === null ? 0 : (Date.parse(job.endAt) - Date.parse(job.startAt ?? '')) / 60_000
+  const endMinutes = startMinutes + Math.max(lengthMinutes, 0)
+  return hours.weekly.some(
+    (window) =>
+      window.weekday === start.weekday &&
+      minutesOf(window.start) <= startMinutes &&
+      endMinutes <= minutesOf(window.end),
+  )
+}
+
+/**
+ * G23, R13 f, D-110: one hours conflict per provider whose timed bookings (completed, scheduled
+ * or in progress) fall outside fully parsed declared hours. 24/7 claims are not a pattern (G20).
+ */
+function hoursConflict(
+  providerId: string,
+  hours: DeclaredHoursCandidate | undefined,
+  providerJobs: readonly JobRow[],
+  recordsOf: (job: JobRow) => RecordKey[],
+): ProviderConflictRow[] {
+  if (hours === undefined || hours.parsed !== 'full' || hours.alwaysOpen === true) return []
+  const outside = providerJobs
+    .filter(
+      (job) =>
+        BOOKED_STATUSES.has(job.status) &&
+        job.startAt !== null &&
+        !job.allDay &&
+        job.timeBasis !== 'date_only' &&
+        !withinDeclaredHours(job, hours),
+    )
+    .sort((a, b) => (a.startAt ?? '').localeCompare(b.startAt ?? '') || a.id.localeCompare(b.id))
+  if (outside.length === 0) return []
+  const localDates = unique(
+    outside.map((job) =>
+      DateTime.fromISO(job.startAt ?? '', { zone: 'utc' })
+        .setZone(TIME_ZONE)
+        .toISODate(),
+    ),
+  )
+  return [
+    {
+      providerId,
+      kind: 'hours',
+      detail: {
+        declaredHours: hours.hoursRaw,
+        outsideBookings: outside.length,
+        completed: outside.filter((job) => job.status === 'completed').length,
+        scheduledOrInProgress: outside.filter((job) => job.status !== 'completed').length,
+        localDates,
+      },
+      records: outside.flatMap(recordsOf),
     },
   ]
 }
@@ -380,8 +458,14 @@ export function buildCanonical(
     }),
   )
 
+  // G6: a CRM A job with visits is a container; its visits are the work, so it is not counted.
+  const visitParents = new Set(
+    jobs.flatMap((job) => (job.parentJobId === null ? [] : [job.parentJobId])),
+  )
+  const work = jobs.filter((job) => !visitParents.has(job.id))
+
   // Completed jobs and visits are where a provider has actually worked (G23).
-  const worked = jobs.filter(
+  const worked = work.filter(
     (job) => job.status === 'completed' && job.kind !== 'estimate' && job.propertyId !== null,
   )
   const workedZips = (job: JobRow) => propertyById.get(job.propertyId ?? '')?.address.zip ?? null
@@ -435,7 +519,7 @@ export function buildCanonical(
 
   const tradeConflicts = [
     ...groupBy(
-      jobs.filter((job) => job.tradeConflict !== null),
+      work.filter((job) => job.tradeConflict !== null),
       (job) =>
         [job.providerId, job.tradeConflict?.observedTrade, job.tradeConflict?.reason].join('|'),
     ).values(),
@@ -452,6 +536,16 @@ export function buildCanonical(
       records: conflictJobs.flatMap(primaryRecord),
     }
   })
+
+  const jobsByProvider = groupBy(work, (job) => job.providerId)
+  const hoursConflicts = providers.flatMap((provider) =>
+    hoursConflict(
+      provider.id,
+      hoursByProvider.get(provider.id),
+      jobsByProvider.get(provider.id) ?? [],
+      primaryRecord,
+    ),
+  )
 
   const crmConflicts = providers.flatMap((provider) =>
     crmConflict(provider.id, candidatesByProvider.get(provider.id) ?? []),
@@ -587,7 +681,12 @@ export function buildCanonical(
   return {
     providers,
     providerLinks,
-    providerConflicts: [...serviceAreaConflicts, ...tradeConflicts, ...crmConflicts],
+    providerConflicts: [
+      ...hoursConflicts,
+      ...serviceAreaConflicts,
+      ...tradeConflicts,
+      ...crmConflicts,
+    ],
     properties,
     propertyLinks,
     contacts,
