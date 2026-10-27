@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 import { haversineMeters, type LatLon } from '../../normalize/geocode.ts'
@@ -8,19 +9,25 @@ import { ToolInputError } from '../errors.ts'
 import { presentJob } from '../present.ts'
 import { mergeSources } from '../privacy.ts'
 import { respond } from '../result.ts'
-import { intField, localDateField, textField } from '../schemas.ts'
+import { intField, localDateField, textField, tradeField } from '../schemas.ts'
 import { lastMonthsWindow, presentWindow, windowInstants, type LocalWindow } from '../time.ts'
 
 const METERS_PER_MILE = 1609.344
 const MAX_RADIUS_MILES = 5
 
-const DESCRIPTION = `Completed home-service work near a street address, grouped by trade with counts.
+const DEFAULT_LIMIT = 10
+const MAX_LIMIT = 100
+const MAX_SAMPLES = 3
+
+const DESCRIPTION = `Completed home-service work near a street address: per-trade counts, a few sample jobs per trade, and a paged list of the jobs.
 
 Use when the question is "what work has been done near <address>" or "how many <trade> jobs within <distance> of <address>". Counts completed jobs only: estimates, cancelled and future work are excluded, and the visits of one recurring CRM job count as one job. Distance is straight-line between geocoded homes; addresses that cannot be placed on the street map are not counted.
 
+Answer from "total" and the per-trade counts in "groups" (each with up to ${String(MAX_SAMPLES)} sample jobs and their sources). "jobs" is one page of the full job list (newest first within each trade, trades in the order of "groups"); page only if you need the individual jobs: call again with the same arguments plus cursor = the previous response's nextCursor, until nextCursor is null. limit sets the page size; trade restricts the paged list to one trade (the counts always cover every trade).
+
 Do not use it for one home's own history (use get_property_service_history instead), for upcoming bookings on a block (use get_scheduled_work_on_block), or to pick a provider (use find_providers or rank_providers_for_job).
 
-Parameters: address (street address with number, street and 5-digit zip), radiusMiles (0 < r <= 5), lastMonths (1-60) or since/until (YYYY-MM-DD, until exclusive), groupBy ("trade").
+Parameters: address (street address with number, street and 5-digit zip), radiusMiles (0 < r <= 5), lastMonths (1-60) or since/until (YYYY-MM-DD, until exclusive), groupBy ("trade"), limit (1-${String(MAX_LIMIT)} jobs per page, default ${String(DEFAULT_LIMIT)}), cursor (nextCursor from the previous page), trade (optional, filters the paged list).
 Privacy: homes are shown as "4500 block of Live Oak St" + zip; only the house number you supplied is echoed.
 
 Example: {"address": "4512 Live Oak St, Dallas, TX 75204", "radiusMiles": 0.5, "lastMonths": 24, "groupBy": "trade"}`
@@ -63,6 +70,23 @@ export const searchJobHistoryInput = {
     .enum(['trade'], { error: 'groupBy must be "trade"' })
     .default('trade')
     .describe('How to group the results; only "trade" is supported.'),
+  limit: intField('limit', 1, MAX_LIMIT, 'jobs')
+    .default(DEFAULT_LIMIT)
+    .describe(
+      `Jobs per page of the "jobs" list, 1-${String(MAX_LIMIT)}. Default ${String(DEFAULT_LIMIT)}. The per-trade counts never depend on it.`,
+    ),
+  cursor: z
+    .string({ error: 'cursor must be the nextCursor string of the previous response' })
+    .max(200, 'cursor must be the nextCursor string of the previous response, unchanged')
+    .optional()
+    .describe(
+      "Opaque page token: pass the previous response's nextCursor unchanged, with the other arguments repeated as they were. Omit it for the first page.",
+    ),
+  trade: tradeField
+    .optional()
+    .describe(
+      'Only page through jobs of this trade. The per-trade counts still cover every trade.',
+    ),
 }
 
 type Input = z.infer<z.ZodObject<typeof searchJobHistoryInput>>
@@ -93,8 +117,42 @@ function boundingBox(origin: LatLon, meters: number) {
   return [origin.lat - dLat, origin.lat + dLat, origin.lon - dLon, origin.lon + dLon]
 }
 
+/** Ties a cursor to the arguments that define the job list, so it can't page another query. */
+function queryKey(input: Input, window: LocalWindow): string {
+  const key = [input.address, input.radiusMiles, window.from, window.to, input.trade ?? '*']
+  return createHash('sha256').update(JSON.stringify(key)).digest('base64url').slice(0, 16)
+}
+
+function encodeCursor(offset: number, key: string): string {
+  return Buffer.from(JSON.stringify({ o: offset, k: key })).toString('base64url')
+}
+
+const BAD_CURSOR =
+  "not a cursor issued for these arguments; pass the previous response's nextCursor unchanged and repeat the other arguments exactly, or omit cursor to start from the first page"
+
+function parseJson(text: string): unknown {
+  try {
+    return JSON.parse(text) as unknown
+  } catch {
+    return undefined
+  }
+}
+
+/** The offset a cursor points at; a cursor from another query or a made-up one is rejected. */
+function decodeCursor(cursor: string, key: string): number {
+  const parsed = parseJson(Buffer.from(cursor, 'base64url').toString('utf8'))
+  if (typeof parsed !== 'object' || parsed === null) throw new ToolInputError('cursor', BAD_CURSOR)
+  const { o, k } = parsed as { o?: unknown; k?: unknown }
+  if (k !== key || typeof o !== 'number' || !Number.isInteger(o) || o < 0) {
+    throw new ToolInputError('cursor', BAD_CURSOR)
+  }
+  return o
+}
+
 export async function searchJobHistoryNearAddress(input: Input, options: ServerOptions) {
   const window = chooseWindow(input, options.today)
+  const key = queryKey(input, window)
+  const offset = input.cursor === undefined ? 0 : decodeCursor(input.cursor, key)
   const caller = await resolveCallerAddress(options.pool, input.address)
   const houseNumber = caller.normalized.houseNumber
   let origin = caller.point
@@ -150,11 +208,19 @@ export async function searchJobHistoryNearAddress(input: Input, options: ServerO
     if (last === undefined) throw new Error('empty service group')
     const first = ordered[0] ?? last
     const presented = presentJob(last.job, houseNumber === null ? [] : [houseNumber])
+    const trade = last.job.trade ?? 'unclassified'
     return {
-      trade: last.job.trade ?? 'unclassified',
+      trade,
+      serviceKey: last.job.serviceKey,
+      // The record the count stands for: a visit group's parent job, else the job itself.
+      counted: (last.job.parentSources.length > 0
+        ? last.job.parentSources
+        : last.job.sources
+      ).slice(0, 1),
       lastDone: doneAt(last.job)?.getTime() ?? 0,
       item: {
         ...presented,
+        trade,
         start: presentJob(first.job).start,
         ...(entries.length > 1 ? { visits: entries.length } : {}),
         distanceMiles: Math.round((last.meters / METERS_PER_MILE) * 100) / 100,
@@ -175,16 +241,22 @@ export async function searchJobHistoryNearAddress(input: Input, options: ServerO
       }, new Map<string, typeof services>())
       .entries(),
   ]
-    .map(([trade, list]) => {
-      const jobs = [...list].sort((a, b) => b.lastDone - a.lastDone).map((s) => s.item)
-      return {
-        trade,
-        count: jobs.length,
-        jobs,
-        sources: mergeSources(...jobs.map((job) => job.sources)),
-      }
-    })
-    .sort((a, b) => b.count - a.count || a.trade.localeCompare(b.trade))
+    .map(([trade, list]) => ({
+      trade,
+      // Newest first; the service key breaks ties so every page sees the same order.
+      jobs: [...list].sort(
+        (a, b) => b.lastDone - a.lastDone || a.serviceKey.localeCompare(b.serviceKey),
+      ),
+    }))
+    .sort((a, b) => b.jobs.length - a.jobs.length || a.trade.localeCompare(b.trade))
+
+  // Q1 summary mode: the counts answer the question; the job list comes one page at a time.
+  const listed = groups
+    .filter((group) => input.trade === undefined || group.trade === input.trade)
+    .flatMap((group) => group.jobs.map((service) => service.item))
+  const page = listed.slice(offset, offset + input.limit)
+  const next = offset + page.length
+  const total = groups.reduce((sum, group) => sum + group.jobs.length, 0)
 
   return {
     query: {
@@ -194,13 +266,28 @@ export async function searchJobHistoryNearAddress(input: Input, options: ServerO
       radiusMiles: input.radiusMiles,
       window: { ...presentWindow(window), fromDate: window.from, toDateExclusive: window.to },
       groupBy: input.groupBy,
+      ...(input.trade === undefined ? {} : { trade: input.trade }),
     },
-    total: groups.reduce((sum, group) => sum + group.count, 0),
-    groups,
+    total,
+    groups: groups.map((group) => {
+      const sampleJobs = group.jobs.slice(0, MAX_SAMPLES)
+      return {
+        trade: group.trade,
+        count: group.jobs.length,
+        sampleJobs: sampleJobs.map((service) => service.item),
+        // One citation per sample, the record it counts; the samples carry the rest. Every
+        // job's sources would defeat the summary on a busy address (D-132).
+        sources: mergeSources(...sampleJobs.map((service) => service.counted)),
+      }
+    }),
+    jobs: page,
+    page: { offset, limit: input.limit, returned: page.length, of: listed.length },
+    nextCursor: next < listed.length ? encodeCursor(next, key) : null,
     notes: [
       'Counts completed jobs whose end falls in the window; estimates, cancelled and future work are excluded.',
       'Visits of one recurring CRM job count once (see "visits").',
       'Distance is straight-line between interpolated home locations.',
+      'Answer from total and groups[].count; page "jobs" with nextCursor only if the individual jobs are needed.',
     ],
   }
 }
@@ -217,6 +304,7 @@ export function registerSearchJobHistoryNearAddress(
       inputSchema: searchJobHistoryInput,
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
-    (args) => respond(() => searchJobHistoryNearAddress(args, options)),
+    (args) =>
+      respond('search_job_history_near_address', () => searchJobHistoryNearAddress(args, options)),
   )
 }

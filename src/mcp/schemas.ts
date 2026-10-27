@@ -22,13 +22,20 @@ export function zipField(field: string, description: string) {
 }
 
 export function localDateField(field: string, description: string) {
-  return z
-    .string({ error: `${field} must be a local date in YYYY-MM-DD (ISO 8601) form` })
-    .refine(
-      isLocalDate,
-      `${field} must be a real local date in YYYY-MM-DD (ISO 8601) form, e.g. "2026-11-02"; relative words like "tomorrow" are not accepted`,
-    )
-    .describe(description)
+  return (
+    z
+      .string({ error: `${field} must be a local date in YYYY-MM-DD (ISO 8601) form` })
+      // The pattern shows the shape in the JSON Schema (R18 b); the refine rejects 2026-02-30.
+      .regex(
+        /^\d{4}-\d{2}-\d{2}$/,
+        `${field} must be a local date in YYYY-MM-DD (ISO 8601) form, e.g. "2026-11-02"`,
+      )
+      .refine(
+        isLocalDate,
+        `${field} must be a real local date in YYYY-MM-DD (ISO 8601) form, e.g. "2026-11-02"; relative words like "tomorrow" are not accepted`,
+      )
+      .describe(description)
+  )
 }
 
 export function windowField(field: string, description: string) {
