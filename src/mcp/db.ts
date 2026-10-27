@@ -95,6 +95,8 @@ export interface Job {
   providerName: string
   /** Visits of one CRM A job share it; otherwise the job's own id (Q1 counts services). */
   serviceKey: string
+  /** G6: a visit's parent CRM job record(s), so a counted job cites its own id (R19). */
+  parentSources: Source[]
   kind: 'job' | 'visit' | 'estimate'
   status: string
   trade: string | null
@@ -142,6 +144,7 @@ interface JobRow {
   lon: number | null
   source_systems: string[]
   sources: unknown
+  parent_sources: unknown
 }
 
 function toJob(row: JobRow): Job {
@@ -170,6 +173,7 @@ function toJob(row: JobRow): Job {
     lon: row.lon,
     sourceSystems: row.source_systems,
     sources: readSources(row.sources),
+    parentSources: row.parent_sources === null ? [] : readSources(row.parent_sources),
   }
 }
 
@@ -194,8 +198,10 @@ export async function loadJobs(
     `SELECT j.id, j.provider_id, j.provider_name, j.parent_job_id, j.kind, j.status, j.trade,
             j.service, j.start_at, j.end_at, j.completed_at, j.all_day, j.description,
             j.duplicate_count, j.confidence, j.block_number, j.block_label, j.street_name,
-            j.street_type, j.zip, j.lat, j.lon, j.source_systems, j.sources
+            j.street_type, j.zip, j.lat, j.lon, j.source_systems, j.sources,
+            ps.sources AS parent_sources
        FROM v_jobs j
+       LEFT JOIN v_entity_sources ps ON ps.entity = 'job' AND ps.entity_id = j.parent_job_id
       WHERE (${where}) AND ${NOT_VISIT_PARENT}
       ORDER BY j.start_at NULLS LAST, j.id`,
     [...params],
