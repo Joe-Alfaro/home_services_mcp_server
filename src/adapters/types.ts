@@ -132,6 +132,8 @@ export interface JobCandidate {
    * candidates compile; every adapter sets it (null when none).
    */
   rescheduledFrom?: LocalDate | null
+  /** CRM B jobs: the native ID of the approved estimate the job was created from (G5). */
+  originalEstimateRecordId?: string | null
 }
 
 export interface CalendarBlockCandidate {

@@ -10,7 +10,8 @@ function chunks<T>(items: readonly T[], size: number): T[][] {
   )
 }
 
-async function insertInChunks(
+/** Inserts rows in chunks; `sql` reads the chunk as `$1::jsonb` (e.g. via jsonb_to_recordset). */
+export async function insertInChunks(
   client: pg.Client,
   sql: string,
   rows: readonly unknown[],
@@ -34,54 +35,68 @@ export async function writeIngest(
   await client.query('BEGIN')
   try {
     await client.query('DELETE FROM ingest_runs')
-    const { rows } = await client.query<{ id: string }>(
-      `INSERT INTO ingest_runs (started_at, today, now, data_pack_dir, summary)
-       VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-      [ctx.ingestedAt, ctx.today, ctx.now, ctx.dataPackDir, JSON.stringify(summary)],
-    )
-    const runId = Number(rows[0]?.id)
-
-    const records = results.flatMap(({ batch }) =>
-      candidatesOf(batch).map((candidate) => ({
-        ...candidate.ref,
-        recordType: candidate.type,
-        payload: candidate,
-      })),
-    )
-    await insertInChunks(
-      client,
-      `INSERT INTO source_records (run_id, source_system, source_account, source_file,
-         source_record_id, record_type, ingested_at, payload)
-       SELECT ${String(runId)}, r."sourceSystem", r."sourceAccount", r."sourceFile",
-         r."sourceRecordId", r."recordType", r."ingestedAt", r.payload
-       FROM jsonb_to_recordset($1::jsonb) AS r("sourceSystem" text, "sourceAccount" text,
-         "sourceFile" text, "sourceRecordId" text, "recordType" text, "ingestedAt" timestamptz,
-         payload jsonb)`,
-      records,
-    )
-
-    const issues = results.flatMap(({ batch }) =>
-      batch.issues.map((issue) => ({
-        ...issue.ref,
-        severity: issue.severity,
-        code: issue.code,
-        message: issue.message,
-      })),
-    )
-    await insertInChunks(
-      client,
-      `INSERT INTO ingest_issues (run_id, source_system, source_account, source_file,
-         source_record_id, severity, code, message)
-       SELECT ${String(runId)}, r."sourceSystem", r."sourceAccount", r."sourceFile",
-         r."sourceRecordId", r.severity, r.code, r.message
-       FROM jsonb_to_recordset($1::jsonb) AS r("sourceSystem" text, "sourceAccount" text,
-         "sourceFile" text, "sourceRecordId" text, severity text, code text, message text)`,
-      issues,
-    )
+    const runId = await insertIngest(client, ctx, results, summary)
     await client.query('COMMIT')
     return runId
   } catch (error) {
     await client.query('ROLLBACK')
     throw error
   }
+}
+
+/**
+ * Inserts one ingest run with its source records and issues. The caller owns the transaction
+ * and removes earlier runs first.
+ */
+export async function insertIngest(
+  client: pg.Client,
+  ctx: AdapterContext,
+  results: readonly SourceResult[],
+  summary: IngestSummary,
+): Promise<number> {
+  const { rows } = await client.query<{ id: string }>(
+    `INSERT INTO ingest_runs (started_at, today, now, data_pack_dir, summary)
+     VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+    [ctx.ingestedAt, ctx.today, ctx.now, ctx.dataPackDir, JSON.stringify(summary)],
+  )
+  const runId = Number(rows[0]?.id)
+
+  const records = results.flatMap(({ batch }) =>
+    candidatesOf(batch).map((candidate) => ({
+      ...candidate.ref,
+      recordType: candidate.type,
+      payload: candidate,
+    })),
+  )
+  await insertInChunks(
+    client,
+    `INSERT INTO source_records (run_id, source_system, source_account, source_file,
+       source_record_id, record_type, ingested_at, payload)
+     SELECT ${String(runId)}, r."sourceSystem", r."sourceAccount", r."sourceFile",
+       r."sourceRecordId", r."recordType", r."ingestedAt", r.payload
+     FROM jsonb_to_recordset($1::jsonb) AS r("sourceSystem" text, "sourceAccount" text,
+       "sourceFile" text, "sourceRecordId" text, "recordType" text, "ingestedAt" timestamptz,
+       payload jsonb)`,
+    records,
+  )
+
+  const issues = results.flatMap(({ batch }) =>
+    batch.issues.map((issue) => ({
+      ...issue.ref,
+      severity: issue.severity,
+      code: issue.code,
+      message: issue.message,
+    })),
+  )
+  await insertInChunks(
+    client,
+    `INSERT INTO ingest_issues (run_id, source_system, source_account, source_file,
+       source_record_id, severity, code, message)
+     SELECT ${String(runId)}, r."sourceSystem", r."sourceAccount", r."sourceFile",
+       r."sourceRecordId", r.severity, r.code, r.message
+     FROM jsonb_to_recordset($1::jsonb) AS r("sourceSystem" text, "sourceAccount" text,
+       "sourceFile" text, "sourceRecordId" text, severity text, code text, message text)`,
+    issues,
+  )
+  return runId
 }

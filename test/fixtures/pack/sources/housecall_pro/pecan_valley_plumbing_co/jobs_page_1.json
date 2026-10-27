@@ -1,0 +1,94 @@
+{
+  "page": 1,
+  "page_size": 2,
+  "total_pages": 2,
+  "total_items": 3,
+  "jobs": [
+    {
+      "id": "job-pv-01",
+      "invoice_number": "7101",
+      "description": "replace water heater 50 gal",
+      "customer": {
+        "id": "cus-pv-01",
+        "first_name": "Beatrix",
+        "last_name": "Quennell",
+        "email": "beatrix.q@example.org",
+        "mobile_number": "214-555-0187"
+      },
+      "address": {
+        "id": "adr-pv-01",
+        "street": "5823 BELMONT AVENUE",
+        "street_line_2": null,
+        "city": "dallas",
+        "state": "TX",
+        "zip": "75206"
+      },
+      "work_status": "complete rated",
+      "schedule": {
+        "scheduled_start": "2026-02-10T09:00:00",
+        "scheduled_end": "2026-02-10T12:00:00",
+        "arrival_window": 60
+      },
+      "work_timestamps": {
+        "on_my_way_at": null,
+        "started_at": "2026-02-10T09:00:00",
+        "completed_at": "2026-02-10T12:00:00"
+      },
+      "total_amount": 210000,
+      "outstanding_balance": 0,
+      "assigned_employees": [
+        {
+          "first_name": "Ambrose",
+          "last_name": "Teague"
+        }
+      ],
+      "tags": [],
+      "original_estimate_id": "est-pv-01",
+      "notes": null,
+      "created_at": "2025-12-15T15:00:00Z"
+    },
+    {
+      "id": "job-pv-02",
+      "invoice_number": "7102",
+      "description": "water heater flush",
+      "customer": {
+        "id": "cus-pv-01",
+        "first_name": "Beatrix",
+        "last_name": "Quennell",
+        "email": "beatrix.q@example.org",
+        "mobile_number": "214-555-0187"
+      },
+      "address": {
+        "id": "adr-pv-01",
+        "street": "5823 BELMONT AVENUE",
+        "street_line_2": null,
+        "city": "dallas",
+        "state": "TX",
+        "zip": "75206"
+      },
+      "work_status": "scheduled",
+      "schedule": {
+        "scheduled_start": "2026-11-02T08:00:00",
+        "scheduled_end": "2026-11-02T12:00:00",
+        "arrival_window": 60
+      },
+      "work_timestamps": {
+        "on_my_way_at": null,
+        "started_at": null,
+        "completed_at": null
+      },
+      "total_amount": 18500,
+      "outstanding_balance": 18500,
+      "assigned_employees": [
+        {
+          "first_name": "Ambrose",
+          "last_name": "Teague"
+        }
+      ],
+      "tags": [],
+      "original_estimate_id": null,
+      "notes": "Gate code 4417, ask for Beatrix Quennell, 214-555-0187",
+      "created_at": "2025-12-15T15:00:00Z"
+    }
+  ]
+}

@@ -1,0 +1,386 @@
+{
+  "data": {
+    "account": {
+      "id": "acct-mockingbird-01",
+      "name": "Mockingbird Drain & Plumbing",
+      "phone": "2145550140",
+      "owner": {
+        "name": "Celestine Ruiz"
+      },
+      "industry": "PLUMBING"
+    },
+    "clients": {
+      "nodes": [
+        {
+          "id": "client-mock-01",
+          "firstName": "Beatrix",
+          "lastName": "Quennell",
+          "companyName": null,
+          "isCompany": false,
+          "emails": [
+            {
+              "address": "beatrix.q@example.org",
+              "primary": true
+            }
+          ],
+          "phones": [
+            {
+              "number": "214-555-0187",
+              "primary": true
+            }
+          ],
+          "createdAt": "2024-09-01T15:00:00Z",
+          "properties": {
+            "nodes": [
+              {
+                "id": "prop-mock-01",
+                "address": {
+                  "street1": "5823 belmont ave.",
+                  "street2": null,
+                  "city": null,
+                  "province": "Texas",
+                  "postalCode": "75206-4410",
+                  "country": "US"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "client-mock-02",
+          "firstName": "Osric",
+          "lastName": "Lamberton",
+          "companyName": null,
+          "isCompany": false,
+          "emails": [],
+          "phones": [
+            {
+              "number": "469-555-0188",
+              "primary": true
+            }
+          ],
+          "createdAt": "2024-09-01T15:00:00Z",
+          "properties": {
+            "nodes": [
+              {
+                "id": "prop-mock-02",
+                "address": {
+                  "street1": "4790 Live Oak Street",
+                  "street2": null,
+                  "city": "Dallas",
+                  "province": "TX",
+                  "postalCode": "75204",
+                  "country": "US"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "client-mock-03",
+          "firstName": "Jessamy",
+          "lastName": "Tolliver",
+          "companyName": null,
+          "isCompany": false,
+          "emails": [],
+          "phones": [
+            {
+              "number": "972-555-0189",
+              "primary": true
+            }
+          ],
+          "createdAt": "2024-09-01T15:00:00Z",
+          "properties": {
+            "nodes": [
+              {
+                "id": "prop-mock-03",
+                "address": {
+                  "street1": "1402 Tupelo Ave",
+                  "street2": null,
+                  "city": "Dallas",
+                  "province": "TX",
+                  "postalCode": "75214",
+                  "country": "US"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "client-mock-04",
+          "firstName": "Rupert",
+          "lastName": "Ashgrove",
+          "companyName": null,
+          "isCompany": false,
+          "emails": [
+            {
+              "address": "rupert.a@example.net",
+              "primary": true
+            }
+          ],
+          "phones": [
+            {
+              "number": "214-555-0190",
+              "primary": true
+            }
+          ],
+          "createdAt": "2024-09-01T15:00:00Z",
+          "properties": {
+            "nodes": [
+              {
+                "id": "prop-mock-04",
+                "address": {
+                  "street1": "5823 Juniper Ave",
+                  "street2": null,
+                  "city": "Dallas",
+                  "province": "TX",
+                  "postalCode": "75206",
+                  "country": "US"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "client-mock-05",
+          "firstName": "Imelda",
+          "lastName": "Corcoran",
+          "companyName": null,
+          "isCompany": false,
+          "emails": [],
+          "phones": [
+            {
+              "number": "469-555-0191",
+              "primary": true
+            }
+          ],
+          "createdAt": "2024-09-01T15:00:00Z",
+          "properties": {
+            "nodes": [
+              {
+                "id": "prop-mock-05",
+                "address": {
+                  "street1": "915 Glade Dr",
+                  "street2": null,
+                  "city": "Garland",
+                  "province": "TX",
+                  "postalCode": "75041",
+                  "country": "US"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "jobs": {
+      "nodes": [
+        {
+          "id": "job-mock-01",
+          "jobNumber": 301,
+          "title": "Water heater repair",
+          "jobType": "ONE_OFF",
+          "jobStatus": "archived",
+          "createdAt": "2024-09-01T15:00:00Z",
+          "client": {
+            "id": "client-mock-01"
+          },
+          "property": {
+            "id": "prop-mock-01"
+          },
+          "total": null,
+          "recurrence": null,
+          "instructions": null,
+          "visits": {
+            "nodes": [
+              {
+                "id": "visit-mock-01",
+                "title": null,
+                "startAt": "2026-07-14T15:00:00Z",
+                "endAt": "2026-07-14T17:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2026-07-14T17:00:00Z",
+                "invoicedAmount": "260.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Celestine Ruiz"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "job-mock-02",
+          "jobNumber": 302,
+          "title": "Sewer line camera",
+          "jobType": "ONE_OFF",
+          "jobStatus": "archived",
+          "createdAt": "2024-09-01T15:00:00Z",
+          "client": {
+            "id": "client-mock-02"
+          },
+          "property": {
+            "id": "prop-mock-02"
+          },
+          "total": null,
+          "recurrence": null,
+          "instructions": null,
+          "visits": {
+            "nodes": [
+              {
+                "id": "visit-mock-02",
+                "title": null,
+                "startAt": "2025-12-01T15:00:00Z",
+                "endAt": "2025-12-01T17:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2025-12-01T17:00:00Z",
+                "invoicedAmount": "350.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Celestine Ruiz"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "job-mock-03",
+          "jobNumber": 303,
+          "title": "new water heater",
+          "jobType": "ONE_OFF",
+          "jobStatus": "archived",
+          "createdAt": "2024-09-01T15:00:00Z",
+          "client": {
+            "id": "client-mock-03"
+          },
+          "property": {
+            "id": "prop-mock-03"
+          },
+          "total": null,
+          "recurrence": null,
+          "instructions": null,
+          "visits": {
+            "nodes": [
+              {
+                "id": "visit-mock-03",
+                "title": null,
+                "startAt": "2026-09-15T14:00:00Z",
+                "endAt": "2026-09-15T18:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2026-09-15T18:00:00Z",
+                "invoicedAmount": "1850.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Celestine Ruiz"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "job-mock-04",
+          "jobNumber": 304,
+          "title": "Faucet repair",
+          "jobType": "ONE_OFF",
+          "jobStatus": "archived",
+          "createdAt": "2024-09-01T15:00:00Z",
+          "client": {
+            "id": "client-mock-04"
+          },
+          "property": {
+            "id": "prop-mock-04"
+          },
+          "total": null,
+          "recurrence": null,
+          "instructions": null,
+          "visits": {
+            "nodes": [
+              {
+                "id": "visit-mock-04",
+                "title": null,
+                "startAt": "2026-06-02T15:00:00Z",
+                "endAt": "2026-06-02T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2026-06-02T16:00:00Z",
+                "invoicedAmount": "140.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Celestine Ruiz"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "job-mock-05",
+          "jobNumber": 305,
+          "title": "Drain cleaning",
+          "jobType": "ONE_OFF",
+          "jobStatus": "archived",
+          "createdAt": "2024-09-01T15:00:00Z",
+          "client": {
+            "id": "client-mock-05"
+          },
+          "property": {
+            "id": "prop-mock-05"
+          },
+          "total": null,
+          "recurrence": null,
+          "instructions": null,
+          "visits": {
+            "nodes": [
+              {
+                "id": "visit-mock-05",
+                "title": null,
+                "startAt": "2026-04-21T15:00:00Z",
+                "endAt": "2026-04-21T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2026-04-21T16:00:00Z",
+                "invoicedAmount": "175.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Celestine Ruiz"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  },
+  "extensions": {
+    "exportedAt": "2026-11-02T06:00:00Z",
+    "apiVersion": "2025-04-16"
+  }
+}
