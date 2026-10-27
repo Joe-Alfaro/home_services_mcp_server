@@ -1,0 +1,11 @@
+{
+  "id": "com-pv-01",
+  "name": "Pecan Valley Plumbing Co LLC",
+  "phone_number": "(214) 555-0110",
+  "support_email": "office@pecanvalleyplumbing.example.com",
+  "address": {
+    "city": "Dallas",
+    "state": "TX",
+    "zip": "75206"
+  }
+}
