@@ -1,0 +1,566 @@
+{
+  "data": {
+    "account": {
+      "id": "acct-q1lawn-01",
+      "name": "Bramble Lawn Care",
+      "phone": "214-555-0707",
+      "owner": {
+        "name": "Corin Thistlewood"
+      },
+      "industry": "LAWN_CARE"
+    },
+    "clients": {
+      "nodes": [
+        {
+          "id": "client-q1lawn-01",
+          "firstName": "Marlowe",
+          "lastName": "Gallant",
+          "companyName": null,
+          "isCompany": false,
+          "emails": [],
+          "phones": [
+            {
+              "number": "469-555-1204",
+              "primary": true
+            }
+          ],
+          "createdAt": "2025-01-02T15:00:00Z",
+          "properties": {
+            "nodes": [
+              {
+                "id": "prop-q1lawn-01",
+                "address": {
+                  "street1": "4466 Live Oak St",
+                  "street2": null,
+                  "city": "Dallas",
+                  "province": "TX",
+                  "postalCode": "75204",
+                  "country": "US"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "client-q1lawn-02",
+          "firstName": "Niamh",
+          "lastName": "Lockhart",
+          "companyName": null,
+          "isCompany": false,
+          "emails": [],
+          "phones": [
+            {
+              "number": "469-555-1205",
+              "primary": true
+            }
+          ],
+          "createdAt": "2025-01-02T15:00:00Z",
+          "properties": {
+            "nodes": [
+              {
+                "id": "prop-q1lawn-02",
+                "address": {
+                  "street1": "4577 Live Oak St",
+                  "street2": null,
+                  "city": "Dallas",
+                  "province": "TX",
+                  "postalCode": "75204",
+                  "country": "US"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "jobs": {
+      "nodes": [
+        {
+          "id": "job-q1lawn-01",
+          "jobNumber": 801,
+          "title": "Biweekly mowing",
+          "jobType": "RECURRING",
+          "jobStatus": "active",
+          "createdAt": "2025-01-03T15:00:00Z",
+          "client": {
+            "id": "client-q1lawn-01"
+          },
+          "property": {
+            "id": "prop-q1lawn-01"
+          },
+          "total": null,
+          "recurrence": {
+            "rule": "Every 4 week(s) on Tuesday",
+            "startDate": "2025-03-04",
+            "endDate": null
+          },
+          "instructions": "Gate code on file",
+          "visits": {
+            "nodes": [
+              {
+                "id": "visit-q1lawn-01-01",
+                "title": null,
+                "startAt": "2025-03-04T15:00:00Z",
+                "endAt": "2025-03-04T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2025-03-04T16:00:00Z",
+                "invoicedAmount": "60.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Mow Crew"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "visit-q1lawn-01-02",
+                "title": null,
+                "startAt": "2025-04-01T15:00:00Z",
+                "endAt": "2025-04-01T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2025-04-01T16:00:00Z",
+                "invoicedAmount": "60.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Mow Crew"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "visit-q1lawn-01-03",
+                "title": null,
+                "startAt": "2025-04-29T15:00:00Z",
+                "endAt": "2025-04-29T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2025-04-29T16:00:00Z",
+                "invoicedAmount": "60.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Mow Crew"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "visit-q1lawn-01-04",
+                "title": null,
+                "startAt": "2025-05-27T15:00:00Z",
+                "endAt": "2025-05-27T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2025-05-27T16:00:00Z",
+                "invoicedAmount": "60.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Mow Crew"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "visit-q1lawn-01-05",
+                "title": null,
+                "startAt": "2025-06-24T15:00:00Z",
+                "endAt": "2025-06-24T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2025-06-24T16:00:00Z",
+                "invoicedAmount": "60.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Mow Crew"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "visit-q1lawn-01-06",
+                "title": null,
+                "startAt": "2025-07-22T15:00:00Z",
+                "endAt": "2025-07-22T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2025-07-22T16:00:00Z",
+                "invoicedAmount": "60.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Mow Crew"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "visit-q1lawn-01-07",
+                "title": null,
+                "startAt": "2025-08-19T15:00:00Z",
+                "endAt": "2025-08-19T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2025-08-19T16:00:00Z",
+                "invoicedAmount": "60.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Mow Crew"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "visit-q1lawn-01-08",
+                "title": null,
+                "startAt": "2025-09-16T15:00:00Z",
+                "endAt": "2025-09-16T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2025-09-16T16:00:00Z",
+                "invoicedAmount": "60.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Mow Crew"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "visit-q1lawn-01-09",
+                "title": null,
+                "startAt": "2025-10-14T15:00:00Z",
+                "endAt": "2025-10-14T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2025-10-14T16:00:00Z",
+                "invoicedAmount": "60.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Mow Crew"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "visit-q1lawn-01-10",
+                "title": null,
+                "startAt": "2025-11-11T15:00:00Z",
+                "endAt": "2025-11-11T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2025-11-11T16:00:00Z",
+                "invoicedAmount": "60.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Mow Crew"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "visit-q1lawn-01-11",
+                "title": null,
+                "startAt": "2025-12-09T15:00:00Z",
+                "endAt": "2025-12-09T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2025-12-09T16:00:00Z",
+                "invoicedAmount": "60.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Mow Crew"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "visit-q1lawn-01-12",
+                "title": null,
+                "startAt": "2026-01-06T15:00:00Z",
+                "endAt": "2026-01-06T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2026-01-06T16:00:00Z",
+                "invoicedAmount": "60.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Mow Crew"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "job-q1lawn-02",
+          "jobNumber": 802,
+          "title": "Biweekly mowing",
+          "jobType": "RECURRING",
+          "jobStatus": "active",
+          "createdAt": "2025-01-03T15:00:00Z",
+          "client": {
+            "id": "client-q1lawn-02"
+          },
+          "property": {
+            "id": "prop-q1lawn-02"
+          },
+          "total": null,
+          "recurrence": {
+            "rule": "Every 4 week(s) on Tuesday",
+            "startDate": "2025-03-04",
+            "endDate": null
+          },
+          "instructions": "Gate code on file",
+          "visits": {
+            "nodes": [
+              {
+                "id": "visit-q1lawn-02-01",
+                "title": null,
+                "startAt": "2025-03-05T15:00:00Z",
+                "endAt": "2025-03-05T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2025-03-05T16:00:00Z",
+                "invoicedAmount": "60.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Mow Crew"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "visit-q1lawn-02-02",
+                "title": null,
+                "startAt": "2025-04-02T15:00:00Z",
+                "endAt": "2025-04-02T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2025-04-02T16:00:00Z",
+                "invoicedAmount": "60.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Mow Crew"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "visit-q1lawn-02-03",
+                "title": null,
+                "startAt": "2025-04-30T15:00:00Z",
+                "endAt": "2025-04-30T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2025-04-30T16:00:00Z",
+                "invoicedAmount": "60.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Mow Crew"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "visit-q1lawn-02-04",
+                "title": null,
+                "startAt": "2025-05-28T15:00:00Z",
+                "endAt": "2025-05-28T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2025-05-28T16:00:00Z",
+                "invoicedAmount": "60.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Mow Crew"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "visit-q1lawn-02-05",
+                "title": null,
+                "startAt": "2025-06-25T15:00:00Z",
+                "endAt": "2025-06-25T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2025-06-25T16:00:00Z",
+                "invoicedAmount": "60.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Mow Crew"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "visit-q1lawn-02-06",
+                "title": null,
+                "startAt": "2025-07-23T15:00:00Z",
+                "endAt": "2025-07-23T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2025-07-23T16:00:00Z",
+                "invoicedAmount": "60.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Mow Crew"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "visit-q1lawn-02-07",
+                "title": null,
+                "startAt": "2025-08-20T15:00:00Z",
+                "endAt": "2025-08-20T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2025-08-20T16:00:00Z",
+                "invoicedAmount": "60.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Mow Crew"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "visit-q1lawn-02-08",
+                "title": null,
+                "startAt": "2025-09-17T15:00:00Z",
+                "endAt": "2025-09-17T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2025-09-17T16:00:00Z",
+                "invoicedAmount": "60.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Mow Crew"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "visit-q1lawn-02-09",
+                "title": null,
+                "startAt": "2025-10-15T15:00:00Z",
+                "endAt": "2025-10-15T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2025-10-15T16:00:00Z",
+                "invoicedAmount": "60.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Mow Crew"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "visit-q1lawn-02-10",
+                "title": null,
+                "startAt": "2025-11-12T15:00:00Z",
+                "endAt": "2025-11-12T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2025-11-12T16:00:00Z",
+                "invoicedAmount": "60.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Mow Crew"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "visit-q1lawn-02-11",
+                "title": null,
+                "startAt": "2025-12-10T15:00:00Z",
+                "endAt": "2025-12-10T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2025-12-10T16:00:00Z",
+                "invoicedAmount": "60.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Mow Crew"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "visit-q1lawn-02-12",
+                "title": null,
+                "startAt": "2026-01-07T15:00:00Z",
+                "endAt": "2026-01-07T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2026-01-07T16:00:00Z",
+                "invoicedAmount": "60.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Mow Crew"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  }
+}

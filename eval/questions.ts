@@ -1,13 +1,20 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { checkCommon, merge, type CheckResult, type Json } from './checks/common.ts'
-import { checkQ1, type Q1Expected } from './checks/q1.ts'
+import {
+  checkCommon,
+  merge,
+  type CheckResult,
+  type Json,
+  type JsonObject,
+} from './checks/common.ts'
+import { checkQ1, checkQ1Pages, type Q1Expected } from './checks/q1.ts'
 import { checkQ2, type Q2Expected } from './checks/q2.ts'
 import { checkQ3, type Q3Expected } from './checks/q3.ts'
 import { checkQ4, type Q4Expected } from './checks/q4.ts'
 import { checkQ5, type Q5Expected } from './checks/q5.ts'
 import { checkQ6, type Q6Expected } from './checks/q6.ts'
+import type { PageSpec } from './paging.ts'
 
 const expectedDir = path.join(path.dirname(fileURLToPath(import.meta.url)), 'expected')
 
@@ -23,7 +30,17 @@ export interface Question {
   tool: string
   args: Record<string, unknown>
   check: (payload: Json) => CheckResult
+  /** Fails when the answer (the first call's text) is this many bytes or more. */
+  maxResponseBytes?: number
+  /**
+   * A paged list to read to the end after the answer (follow-up calls, not retries); `check` gets
+   * the answer and every item of every page.
+   */
+  pages?: PageSpec & { check: (payload: Json, items: JsonObject[]) => CheckResult }
 }
+
+/** Q1's default answer must fit a live agent's context (D-127: summary mode). */
+export const Q1_MAX_RESPONSE_BYTES = 50_000
 
 /** Common assertions (R12 e, R17, R19) plus the question's own expected-answer check. */
 function withCommon(
@@ -40,18 +57,32 @@ export function buildQuestions(): Question[] {
   const q4 = loadExpected('q4') as Q4Expected
   const q5 = loadExpected('q5') as Q5Expected
   const q6 = loadExpected('q6') as Q6Expected
+  const q1Args = {
+    address: '4512 Live Oak St, Dallas, TX 75204',
+    radiusMiles: 0.5,
+    lastMonths: 24,
+    groupBy: 'trade',
+  }
   return [
     {
       id: 'Q1',
       text: 'What home services have been done within half a mile of 4512 Live Oak St, Dallas, TX 75204 in the last 24 months, grouped by trade?',
       tool: 'search_job_history_near_address',
-      args: {
-        address: '4512 Live Oak St, Dallas, TX 75204',
-        radiusMiles: 0.5,
-        lastMonths: 24,
-        groupBy: 'trade',
-      },
+      args: q1Args,
       check: withCommon((p) => checkQ1(p, q1), { allowedHouseNumbers: ['4512'] }),
+      maxResponseBytes: Q1_MAX_RESPONSE_BYTES,
+      pages: {
+        args: { ...q1Args, limit: 100 },
+        itemsKey: 'jobs',
+        cursorKey: 'nextCursor',
+        cursorArg: 'cursor',
+        maxPages: 50,
+        check: (payload, items) =>
+          merge(
+            checkCommon({ jobs: items }, { allowedHouseNumbers: ['4512'] }),
+            checkQ1Pages(payload, items, q1),
+          ),
+      },
     },
     {
       id: 'Q2',

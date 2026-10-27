@@ -7,6 +7,12 @@ differences, and prints the pass rate. It exits 1 when any question fails. Befor
 has loaded the data pack, or before a tool exists, each question fails with `server not ready` or
 `tool not found` rather than crashing.
 
+Q1 is answered in summary mode: its pass/fail comes from the per-trade counts of the first,
+default call, and that call's response must be under 50 KB so a live agent can read it. The
+harness then reads the paged job list to the end with follow-up calls (`limit: 100`, then
+`cursor: <nextCursor>` until `nextCursor` is null) and fails Q1 unless the pages hold exactly as
+many jobs per trade as the summary counts and cite every expected non-CSV job ID exactly once.
+
 The expected answers were derived from the raw data pack by a separate pass that never read the
 implementation. Each file has a `derivation` (how) and a `tolerance` (what may differ) field.
 Availability follows the crew-aware model (capacity = min(crew size, max observed concurrency)).
@@ -30,7 +36,9 @@ The checks look for these fields anywhere in the response (first match, depth fi
 - **Provider name:** `providerName`, `businessName`, `name`, or `provider` (a string or `{ name }`).
 - **Times:** `start` / `end` (also `startsAt`, `startTime`, `scheduledStart`, and the `end`
   equivalents); ISO strings with the America/Chicago offset in force at that instant.
-- **Q1:** an array of `{ trade, count, sources }` (`jobCount`, `jobs` or `total` also read as count).
+- **Q1:** an array of `{ trade, count, sources }` (`jobCount`, `jobs` or `total` also read as count);
+  a top-level `total`, when present, must be their sum. The paged list is `jobs: [{ trade, sources,
+… }]` with `nextCursor` (a string, or null on the last page).
 - **Q2:** an array of providers, each with `openings: [{ start, end, confidence }]`.
 - **Q3, Q5:** an array of items with a provider name and `start`; `kind` (or `type`, `label`,
   `category`) says `estimate`; `status` uses the canonical values.
