@@ -3,7 +3,14 @@ import { z } from 'zod'
 import { normalizeBusinessName } from '../../normalize/name.ts'
 import { loadAvailability, presentOpenings } from '../availability.ts'
 import type { ServerOptions } from '../context.ts'
-import { loadConflicts, loadProvider, loadProviders, type Conflict, type Provider } from '../db.ts'
+import {
+  loadConflicts,
+  loadProvider,
+  loadProviders,
+  NOT_VISIT_PARENT,
+  type Conflict,
+  type Provider,
+} from '../db.ts'
 import { ToolInputError } from '../errors.ts'
 import { mergeSources } from '../privacy.ts'
 import { respond } from '../result.ts'
@@ -119,7 +126,7 @@ async function loadHistory(options: ServerOptions, provider: Provider) {
   const { rows } = await options.pool.query<HistoryRow>(
     `SELECT kind, status, count(*) AS n, min(coalesce(end_at, completed_at, start_at)) AS first_at,
             max(coalesce(end_at, completed_at, start_at)) AS last_at
-       FROM v_jobs WHERE provider_id = $1 GROUP BY kind, status`,
+       FROM v_jobs j WHERE provider_id = $1 AND ${NOT_VISIT_PARENT} GROUP BY kind, status`,
     [provider.id],
   )
   const work = rows.filter((row) => row.kind !== 'estimate')
@@ -129,8 +136,8 @@ async function loadHistory(options: ServerOptions, provider: Provider) {
   const firstDates = completed.flatMap((row) => (row.first_at === null ? [] : [row.first_at]))
   const lastDates = completed.flatMap((row) => (row.last_at === null ? [] : [row.last_at]))
   const { rows: byTrade } = await options.pool.query<{ trade: string | null; n: string }>(
-    `SELECT trade, count(*) AS n FROM v_jobs
-      WHERE provider_id = $1 AND kind <> 'estimate' AND status = 'completed'
+    `SELECT trade, count(*) AS n FROM v_jobs j
+      WHERE provider_id = $1 AND kind <> 'estimate' AND status = 'completed' AND ${NOT_VISIT_PARENT}
       GROUP BY trade ORDER BY count(*) DESC, trade`,
     [provider.id],
   )

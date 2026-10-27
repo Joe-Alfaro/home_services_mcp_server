@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { DateTime } from 'luxon'
 import type {
   CalendarBlockCandidate,
   Candidate,
@@ -9,14 +10,14 @@ import type {
   SourceRef,
   SourceSystem,
 } from '../adapters/types.ts'
-import { normalizeAddress } from '../normalize/address.ts'
+import { addressKey, normalizeAddress, type NormalizedAddress } from '../normalize/address.ts'
 import type { StreetIndex } from '../normalize/geocode.ts'
 import { normalizePhone } from '../normalize/phone.ts'
 import { redactText } from '../normalize/redact.ts'
 import { classifyJob, type TradeConflict } from '../normalize/trade.ts'
 import { refKey, stableId } from '../resolve/ids.ts'
 import { resolveJobs } from '../resolve/jobs.ts'
-import { resolveProperties } from '../resolve/properties.ts'
+import { resolveProperties, type ResolvedProperty } from '../resolve/properties.ts'
 import { resolveProviders, type ResolvedProvider } from '../resolve/providers.ts'
 
 /*
@@ -58,7 +59,7 @@ export interface ProviderRow {
 
 export interface ProviderConflictRow {
   providerId: string
-  kind: 'service_area' | 'trade' | 'crm'
+  kind: 'hours' | 'service_area' | 'trade' | 'crm'
   detail: Record<string, unknown>
   records: RecordKey[]
 }
@@ -116,6 +117,8 @@ export interface JobRow {
   isRecurring: boolean
   descriptionRedacted: string | null
   rescheduleNoteRedacted: string | null
+  /** G9: the local date "YYYY-MM-DD" the job moved from; its old slot never blocks. */
+  rescheduledFrom: string | null
   duplicateCount: number
   confidence: number
 }
@@ -127,6 +130,8 @@ export interface DeclaredHoursRow {
   endLocal: string
   record: RecordKey
   parsed: DeclaredHoursCandidate['parsed']
+  /** G20: the profile claims 24/7; openings then come from observed hours. */
+  alwaysOpen: boolean
 }
 
 export interface CalendarBlockRow {
@@ -141,6 +146,8 @@ export interface CalendarBlockRow {
   recurrenceUid: string | null
   mirroredJobId: string | null
   mirrorConfidence: number | null
+  /** G17: a tentative hold still blocks, at low confidence. */
+  status: NonNullable<CalendarBlockCandidate['status']>
   record: RecordKey
 }
 
@@ -170,6 +177,20 @@ export interface CanonicalModel {
 
 /** provider_links method for a job record tied to its provider through its account. */
 export const ACCOUNT_RECORD_METHOD = 'account_record'
+/**
+ * R8 (c): a job record belongs to its account by construction, so the account_record tier is
+ * certain on its own; its link carries this times the account's own match confidence.
+ */
+export const ACCOUNT_RECORD_CONFIDENCE = 1
+
+const TIME_ZONE = 'America/Chicago'
+
+/** Booked work: what a provider was actually there for (cancelled and undated work never is). */
+const BOOKED_STATUSES: ReadonlySet<JobRow['status']> = new Set([
+  'completed',
+  'scheduled',
+  'in_progress',
+])
 
 const CRM_SYSTEMS: ReadonlyArray<[SourceSystem, RegExp]> = [
   ['jobber', /jobber/i],
@@ -266,28 +287,120 @@ function crmConflict(
   ]
 }
 
+function minutesOf(time: string): number {
+  const [hours = 0, minutes = 0] = time.split(':').map(Number)
+  return hours * 60 + minutes
+}
+
+/**
+ * True when the booking's local span fits inside one declared window of its local weekday. A
+ * booking without an end is judged by its start alone.
+ */
+function withinDeclaredHours(job: JobRow, hours: DeclaredHoursCandidate): boolean {
+  const start = DateTime.fromISO(job.startAt ?? '', { zone: 'utc' }).setZone(TIME_ZONE)
+  const startMinutes = start.hour * 60 + start.minute
+  const lengthMinutes =
+    job.endAt === null ? 0 : (Date.parse(job.endAt) - Date.parse(job.startAt ?? '')) / 60_000
+  const endMinutes = startMinutes + Math.max(lengthMinutes, 0)
+  return hours.weekly.some(
+    (window) =>
+      window.weekday === start.weekday &&
+      minutesOf(window.start) <= startMinutes &&
+      endMinutes <= minutesOf(window.end),
+  )
+}
+
+/**
+ * G23, R13 f, D-110: one hours conflict per provider whose timed bookings (completed, scheduled
+ * or in progress) fall outside fully parsed declared hours. 24/7 claims are not a pattern (G20).
+ */
+function hoursConflict(
+  providerId: string,
+  hours: DeclaredHoursCandidate | undefined,
+  providerJobs: readonly JobRow[],
+  recordsOf: (job: JobRow) => RecordKey[],
+): ProviderConflictRow[] {
+  if (hours === undefined || hours.parsed !== 'full' || hours.alwaysOpen === true) return []
+  const outside = providerJobs
+    .filter(
+      (job) =>
+        BOOKED_STATUSES.has(job.status) &&
+        job.startAt !== null &&
+        !job.allDay &&
+        job.timeBasis !== 'date_only' &&
+        !withinDeclaredHours(job, hours),
+    )
+    .sort((a, b) => (a.startAt ?? '').localeCompare(b.startAt ?? '') || a.id.localeCompare(b.id))
+  if (outside.length === 0) return []
+  const localDates = unique(
+    outside.map((job) =>
+      DateTime.fromISO(job.startAt ?? '', { zone: 'utc' })
+        .setZone(TIME_ZONE)
+        .toISODate(),
+    ),
+  )
+  return [
+    {
+      providerId,
+      kind: 'hours',
+      detail: {
+        declaredHours: hours.hoursRaw,
+        outsideBookings: outside.length,
+        completed: outside.filter((job) => job.status === 'completed').length,
+        scheduledOrInProgress: outside.filter((job) => job.status !== 'completed').length,
+        localDates,
+      },
+      records: outside.flatMap(recordsOf),
+    },
+  ]
+}
+
+/** Home identity without the zip: number + street + type + unit. */
+function zipFreeIdentity(address: NormalizedAddress): string {
+  return addressKey({ ...address, zip: null })
+}
+
 /**
  * G18, D-085: each block's LOCATION normalized like a property address. A location that names a
  * known property maps to it; any other full address (house number and street) maps to a home of
  * its own, so the resolver refuses a mirror to a job at a different known home. Locations without
  * a full address stay unknown (time-only mirroring, D-021).
+ * G18, D-122: `sameHome` tells the resolver that two homes with the same number, street and unit
+ * are one address when only one side has a zip (a zip-less CSV row and a zipped CRM record or
+ * LOCATION of the same house are often two property rows).
  */
 function withBlockProperties(
   blocks: readonly CalendarBlockCandidate[],
   index: StreetIndex,
   propertyIdByKey: ReadonlyMap<string, string>,
-  propertyIdByAddress: ReadonlyMap<string, string>,
-): { blocks: CalendarBlockCandidate[]; propertyIdByKey: Map<string, string> } {
+  properties: readonly ResolvedProperty[],
+): {
+  blocks: CalendarBlockCandidate[]
+  propertyIdByKey: Map<string, string>
+  sameHome: (a: string, b: string) => boolean
+} {
   const byKey = new Map(propertyIdByKey)
+  const propertyIdByAddress = new Map(properties.map((p) => [p.addressKey, p.id]))
+  const addressById = new Map(properties.map((p) => [p.id, p.address]))
   const located = blocks.map((block) => {
     if (block.location === undefined || block.location === null) return block
     const address = normalizeAddress(block.location, index)
     if (address.houseNumber === null || address.streetName === null) return block
     const propertyKey = `${block.providerKey}:location:${address.key}`
-    byKey.set(propertyKey, propertyIdByAddress.get(address.key) ?? `location:${address.key}`)
+    const propertyId = propertyIdByAddress.get(address.key) ?? `location:${address.key}`
+    byKey.set(propertyKey, propertyId)
+    if (!addressById.has(propertyId)) addressById.set(propertyId, address)
     return { ...block, propertyKey }
   })
-  return { blocks: located, propertyIdByKey: byKey }
+  function sameHome(a: string, b: string): boolean {
+    const left = addressById.get(a)
+    const right = addressById.get(b)
+    if (left === undefined || right === undefined) return false
+    if (left.houseNumber === null || left.streetName === null) return false
+    if ((left.zip === null) === (right.zip === null)) return false
+    return zipFreeIdentity(left) === zipFreeIdentity(right)
+  }
+  return { blocks: located, propertyIdByKey: byKey, sameHome }
 }
 
 export function buildCanonical(
@@ -306,13 +419,14 @@ export function buildCanonical(
     blockCandidates,
     index,
     propertyResolution.propertyIdByKey,
-    new Map(propertyResolution.properties.map((p) => [p.addressKey, p.id])),
+    propertyResolution.properties,
   )
   const jobResolution = resolveJobs({
     jobs: jobCandidates,
     calendarBlocks: located.blocks,
     providerIdByKey: providerResolution.providerIdByKey,
     propertyIdByKey: located.propertyIdByKey,
+    sameHome: located.sameHome,
   })
   const { providerIdByKey } = providerResolution
 
@@ -363,6 +477,7 @@ export function buildCanonical(
       isRecurring: primary?.isRecurring ?? false,
       descriptionRedacted: redactText(text, { names }),
       rescheduleNoteRedacted: redactText(primary?.rescheduleNote ?? null, { names }),
+      rescheduledFrom: primary?.rescheduledFrom ?? null,
       duplicateCount: job.duplicateCount,
       confidence: job.confidence,
     }
@@ -380,8 +495,14 @@ export function buildCanonical(
     }),
   )
 
+  // G6: a CRM A job with visits is a container; its visits are the work, so it is not counted.
+  const visitParents = new Set(
+    jobs.flatMap((job) => (job.parentJobId === null ? [] : [job.parentJobId])),
+  )
+  const work = jobs.filter((job) => !visitParents.has(job.id))
+
   // Completed jobs and visits are where a provider has actually worked (G23).
-  const worked = jobs.filter(
+  const worked = work.filter(
     (job) => job.status === 'completed' && job.kind !== 'estimate' && job.propertyId !== null,
   )
   const workedZips = (job: JobRow) => propertyById.get(job.propertyId ?? '')?.address.zip ?? null
@@ -435,7 +556,7 @@ export function buildCanonical(
 
   const tradeConflicts = [
     ...groupBy(
-      jobs.filter((job) => job.tradeConflict !== null),
+      work.filter((job) => job.tradeConflict !== null),
       (job) =>
         [job.providerId, job.tradeConflict?.observedTrade, job.tradeConflict?.reason].join('|'),
     ).values(),
@@ -452,6 +573,16 @@ export function buildCanonical(
       records: conflictJobs.flatMap(primaryRecord),
     }
   })
+
+  const jobsByProvider = groupBy(work, (job) => job.providerId)
+  const hoursConflicts = providers.flatMap((provider) =>
+    hoursConflict(
+      provider.id,
+      hoursByProvider.get(provider.id),
+      jobsByProvider.get(provider.id) ?? [],
+      primaryRecord,
+    ),
+  )
 
   const crmConflicts = providers.flatMap((provider) =>
     crmConflict(provider.id, candidatesByProvider.get(provider.id) ?? []),
@@ -483,8 +614,12 @@ export function buildCanonical(
         entityId: providerId,
         record: recordKeyOf(job.ref, 'job'),
         method: ACCOUNT_RECORD_METHOD,
-        confidence: accountLink.confidence,
-        evidence: { providerKey: job.providerKey, accountMethod: accountLink.method },
+        confidence: accountLink.confidence * ACCOUNT_RECORD_CONFIDENCE,
+        evidence: {
+          providerKey: job.providerKey,
+          accountMethod: accountLink.method,
+          accountConfidence: accountLink.confidence,
+        },
       },
     ]
   })
@@ -546,6 +681,7 @@ export function buildCanonical(
       endLocal: window.end,
       record: recordKeyOf(hours.ref, 'declared_hours'),
       parsed: hours.parsed,
+      alwaysOpen: hours.alwaysOpen ?? false,
     }))
   })
 
@@ -569,6 +705,7 @@ export function buildCanonical(
         recurrenceUid: block.recurrence?.masterUid ?? null,
         mirroredJobId: mirror?.jobId ?? null,
         mirrorConfidence: mirror?.confidence ?? null,
+        status: block.status ?? 'confirmed',
         record: recordKeyOf(block.ref, 'calendar_block'),
       },
     ]
@@ -587,7 +724,12 @@ export function buildCanonical(
   return {
     providers,
     providerLinks,
-    providerConflicts: [...serviceAreaConflicts, ...tradeConflicts, ...crmConflicts],
+    providerConflicts: [
+      ...hoursConflicts,
+      ...serviceAreaConflicts,
+      ...tradeConflicts,
+      ...crmConflicts,
+    ],
     properties,
     propertyLinks,
     contacts,

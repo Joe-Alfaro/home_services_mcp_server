@@ -18,6 +18,8 @@ export function presentJob(job: Job, allowedHouseNumbers: readonly string[] = []
     end: presentOptional(job.endAt),
     ...(job.completedAt === null ? {} : { completedAt: presentOptional(job.completedAt) }),
     ...(job.allDay ? { allDay: true } : {}),
+    // G9: the old slot is gone (it never blocks); the date it moved from is evidence only.
+    rescheduledFrom: job.rescheduledFrom,
     block: job.blockLabel,
     zip: job.zip,
     ...(job.duplicateCount > 1 ? { duplicateSourceRows: job.duplicateCount } : {}),

@@ -304,6 +304,23 @@ describe('pipeline over the fixture pack (M1b)', () => {
       const serviceArea = conflicts.filter((conflict) => conflict.kind === 'service_area')
       expect(JSON.stringify(serviceArea)).toContain('75214')
     })
+
+    it('records the pest visits booked outside its declared hours as an hours conflict (G23)', async () => {
+      // Declared "Mon-Sat 8am-6pm"; visit-pvpest-04 is Sun 11-15 23:30 and visit-pvpest-05 is
+      // Mon 11-16 00:30 local. The cancelled visit-pvpest-03 (Wed 09:00) is inside the hours.
+      const id = await providerOfFile('sources/jobber/pecan_valley_pest.json')
+      const conflicts = await rows<{ detail: unknown; sources: Array<{ sourceRecordId: string }> }>(
+        `SELECT detail, sources FROM v_provider_conflicts
+          WHERE provider_id::text = $1 AND kind = 'hours'`,
+        [id],
+      )
+      expect(conflicts).toHaveLength(1)
+      const [conflict] = conflicts
+      expect(JSON.stringify(conflict?.detail)).toContain('Mon-Sat 8am-6pm')
+      const cited = (conflict?.sources ?? []).map((source) => source.sourceRecordId)
+      expect(cited).toEqual(expect.arrayContaining(['visit-pvpest-04', 'visit-pvpest-05']))
+      expect(cited).not.toContain('visit-pvpest-03')
+    })
   })
 
   describe('property dedupe and geocoding (R7, G19, G22, G24, G28)', () => {
@@ -381,6 +398,58 @@ describe('pipeline over the fixture pack (M1b)', () => {
       )
       expect(links.map((link) => link.source_record_id).sort()).toEqual(['est-pv-01', 'job-pv-01'])
       expect(await count(`SELECT count(*) AS n FROM jobs WHERE kind = 'estimate'`)).toBe(2)
+    })
+  })
+
+  describe('CRM A visits under one parent job (G6)', () => {
+    /** Canonical rows of the recurring pest job's five visits, with their parent. */
+    async function pestVisits() {
+      return rows<{ id: string; kind: string; parent_job_id: string | null }>(
+        `SELECT DISTINCT j.id::text AS id, j.kind, j.parent_job_id::text AS parent_job_id
+           FROM jobs j
+           JOIN job_links jl ON jl.job_id = j.id
+           JOIN source_records sr ON sr.id = jl.source_record_id
+          WHERE sr.source_system = 'jobber' AND sr.source_record_id LIKE 'visit-pvpest-%'`,
+      )
+    }
+
+    it('links all five visits of the recurring job to one canonical parent job', async () => {
+      const visits = await pestVisits()
+      expect(visits).toHaveLength(5)
+      visits.forEach((visit) => {
+        expect(visit.kind).toBe('visit')
+      })
+      const parents = new Set(visits.map((visit) => visit.parent_job_id))
+      expect(parents.size).toBe(1)
+      const [parentId] = [...parents]
+      expect(parentId).not.toBeNull()
+
+      const parent = await rows<{ kind: string; parent_job_id: string | null }>(
+        'SELECT kind, parent_job_id::text AS parent_job_id FROM jobs WHERE id::text = $1',
+        [parentId],
+      )
+      expect(parent).toEqual([{ kind: 'job', parent_job_id: null }])
+    })
+
+    it('traces the parent job to its own CRM A record (R11)', async () => {
+      const [visit] = await pestVisits()
+      const cited = await rows<{ source_record_id: string }>(
+        `SELECT sr.source_record_id
+           FROM job_links jl JOIN source_records sr ON sr.id = jl.source_record_id
+          WHERE jl.job_id::text = $1`,
+        [visit?.parent_job_id ?? ''],
+      )
+      expect(cited.map((row) => row.source_record_id)).toContain('job-pvpest-01')
+    })
+
+    it('counts the job with two completed visits once in Q1-style history', async () => {
+      const id = await providerOfFile('sources/jobber/pecan_valley_pest.json')
+      const services = await count(
+        `SELECT count(DISTINCT coalesce(parent_job_id, id)) AS n FROM jobs
+          WHERE provider_id::text = $1 AND status = 'completed' AND kind <> 'estimate'`,
+        [id],
+      )
+      expect(services).toBe(1)
     })
   })
 

@@ -204,7 +204,30 @@ function parseFile(file: SourceFile, ctx: AdapterContext): CandidateBatch {
         ]
       }
 
-      return visits.flatMap((visit): JobCandidate[] => {
+      // G6: the job itself is one canonical parent its visits point at. Only visits book time
+      // and carry money, so the parent has neither (its total stays raw evidence only).
+      const parentRef = refOf(jobId)
+      const parentStatusRaw = textAt(job, 'jobStatus') ?? ''
+      const parent = finishJob(
+        {
+          ...shared,
+          ref: parentRef,
+          kind: 'job',
+          parentSourceRecordId: null,
+          statusRaw: parentStatusRaw,
+          status: mapStatus(JOB_STATUS, parentStatusRaw, parentRef, issues),
+          startAt: null,
+          endAt: null,
+          timeBasis: null,
+          completedAt: null,
+          amountCents: null,
+          amountRaw: textAt(job, 'total'),
+        },
+        ctx,
+        issues,
+      )
+
+      const visitRows = visits.flatMap((visit): JobCandidate[] => {
         const visitId = textAt(visit, 'id')
         if (visitId === null) return []
         const ref = refOf(visitId)
@@ -231,6 +254,8 @@ function parseFile(file: SourceFile, ctx: AdapterContext): CandidateBatch {
           ),
         ]
       })
+
+      return [parent, ...visitRows]
     })
 
   return { ...emptyBatch(), providers: [provider], properties, jobs, issues }

@@ -81,7 +81,7 @@ files), the canonical row counts and the link counts by method. It exits non-zer
 `error`-severity issue was raised. Running it again leaves the same rows.
 
 The MCP server reads only the `v_*` views (`migrations/0004_read_views.sql` and
-`0005_mcp_views.sql`) as the `hsmcp_reader` role, which has `SELECT` on those views and nothing
+`0005_mcp_views.sql`, `0006_job_parents.sql`) as the `hsmcp_reader` role, which has `SELECT` on those views and nothing
 else. The views carry no
 homeowner names, phones, emails, house numbers or units; every row has a `sources` array of
 citations.
