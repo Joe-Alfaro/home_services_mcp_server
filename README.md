@@ -40,10 +40,10 @@ script banner on stdout, which is the protocol channel.
 | ------------------ | --------------------------------------------- | ----------------------------------------------------------------------- |
 | `DATABASE_URL`     | `postgres://hsmcp:hsmcp@localhost:5434/hsmcp` | Database the app uses.                                                  |
 | `HSMCP_DB_PORT`    | `5434`                                        | Host port for the Compose Postgres; also used by the default URL.       |
-| `DATA_PACK_DIR`    | `../_private/data_pack` (from the repo root)  | Folder holding the source data pack.                                    |
+| `DATA_PACK_DIR`    | `_private/data_pack` (in the repo root)       | Folder holding the source data pack.                                    |
 | `HS_TODAY`         | `2026-11-02`                                  | The service's "today" (YYYY-MM-DD, America/Chicago). Never the clock.   |
 | `HS_NOW`           | midnight of `HS_TODAY`, America/Chicago       | The service's "now". Zone-less values are read as America/Chicago.      |
-| `SCRUB_TERMS_FILE` | `../_private/scrub_terms.txt` (from the root) | Terms the scrub check forbids in tracked files, branch and commit text. |
+| `SCRUB_TERMS_FILE` | `_private/scrub_terms.txt` (in the repo root) | Terms the scrub check forbids in tracked files, branch and commit text. |
 
 All times are stored as instants and presented in America/Chicago.
 

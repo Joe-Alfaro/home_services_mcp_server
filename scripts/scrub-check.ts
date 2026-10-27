@@ -3,10 +3,7 @@ import path from 'node:path'
 import { formatHit, loadTerms, runScrub, ScrubConfigError } from '../src/tooling/scrub.ts'
 
 const repoRoot = execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim()
-const termsFile = path.resolve(
-  repoRoot,
-  process.env.SCRUB_TERMS_FILE ?? '../_private/scrub_terms.txt',
-)
+const termsFile = path.resolve(repoRoot, process.env.SCRUB_TERMS_FILE ?? '_private/scrub_terms.txt')
 
 try {
   const terms = loadTerms(termsFile)
