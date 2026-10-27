@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   checkHouseNumbers,
   checkNoPii,
+  checkResponseSize,
   checkSources,
   checkTimeOffsets,
   normalizeName,
@@ -14,7 +15,12 @@ import type { Q2Expected } from '../../../eval/checks/q2.ts'
 import type { Q3Expected } from '../../../eval/checks/q3.ts'
 import type { Q4Expected } from '../../../eval/checks/q4.ts'
 import type { Q5Expected } from '../../../eval/checks/q5.ts'
-import { buildQuestions, loadExpected, type Question } from '../../../eval/questions.ts'
+import {
+  buildQuestions,
+  loadExpected,
+  Q1_MAX_RESPONSE_BYTES,
+  type Question,
+} from '../../../eval/questions.ts'
 
 // Synthetic tool responses built from eval/expected: a well-formed answer must pass every check
 // (common + question), and each known trap must fail it.
@@ -237,6 +243,116 @@ describe('Q1 search_job_history_near_address', () => {
     const remapped = q1Answer()
     ;(remapped.groups as JsonObject[]).push({ trade: 'water heater', count: 5, sources: SRC })
     expect(failuresOf('Q1', remapped)).toEqual([expect.stringContaining('water heater')])
+  })
+})
+
+/** One paged item per expected Q1 job, citing its record (CSV rows get an implementation id). */
+function q1Pages(): JsonObject[] {
+  const e = loadExpected('q1') as Q1Expected
+  return Object.entries(e.jobIds).flatMap(([trade, ids]) =>
+    ids.map((id, i) => ({
+      trade,
+      block: '4500 block of Live Oak St',
+      zip: '75204',
+      sources: [
+        {
+          sourceSystem: id.slice(0, id.indexOf(':')),
+          sourceFile: 'jobs.json',
+          sourceRecordId: id.startsWith('csv:')
+            ? `row:${String(i + 4)}`
+            : id.slice(id.indexOf(':') + 1),
+        },
+      ],
+    })),
+  )
+}
+
+function q1PageFailures(items: JsonObject[], payload: Json = q1Answer()): string[] {
+  const pages = question('Q1').pages
+  if (pages === undefined) throw new Error('Q1 has no paged list')
+  return pages.check(payload, items).failures
+}
+
+describe('Q1 summary mode: size budget and the paged job list (D-127)', () => {
+  it('caps the default answer at 50 KB and pages the job list 100 at a time', () => {
+    const q1 = question('Q1')
+    expect(q1.maxResponseBytes).toBe(Q1_MAX_RESPONSE_BYTES)
+    expect(Q1_MAX_RESPONSE_BYTES).toBe(50_000)
+    expect(q1.args).not.toHaveProperty('limit')
+    expect(q1.args).not.toHaveProperty('cursor')
+    expect(q1.pages).toMatchObject({
+      args: { ...q1.args, limit: 100 },
+      itemsKey: 'jobs',
+      cursorKey: 'nextCursor',
+      cursorArg: 'cursor',
+    })
+  })
+
+  it('checkResponseSize passes under the budget and fails at or over it', () => {
+    expect(checkResponseSize(49_999, 50_000).failures).toEqual([])
+    expect(checkResponseSize(49_999, 50_000).notes).toEqual([expect.stringContaining('KB')])
+    expect(checkResponseSize(50_000, 50_000).failures).toEqual([
+      expect.stringMatching(/50\.0 KB.*budget/),
+    ])
+    expect(checkResponseSize(113_509, 50_000).failures).toEqual([
+      expect.stringContaining('113.5 KB'),
+    ])
+  })
+
+  it('passes every expected job listed once with full recall', () => {
+    const result = question('Q1').pages?.check(q1Answer(), q1Pages())
+    expect(result?.failures).toEqual([])
+    expect(result?.notes).toEqual(
+      expect.arrayContaining([expect.stringMatching(/recall \(non-CSV\): 988\/988/)]),
+    )
+  })
+
+  it('fails a missing job: count mismatch and recall below 100%', () => {
+    const items = q1Pages()
+    items.splice(0, 1)
+    const failures = q1PageFailures(items)
+    expect(failures).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('paged job list has 1006 jobs'),
+        expect.stringMatching(/recall \(non-CSV\): 987\/988/),
+      ]),
+    )
+  })
+
+  it('fails a job listed twice in place of another', () => {
+    const items = q1Pages()
+    items[1] = structuredClone(items[0] as JsonObject)
+    expect(q1PageFailures(items)).toEqual(
+      expect.arrayContaining([expect.stringContaining('more than one paged item')]),
+    )
+  })
+
+  it('fails a page whose trade tally disagrees with the summary counts', () => {
+    const items = q1Pages()
+    const first = items[0] as JsonObject
+    first.trade = 'roofing'
+    expect(q1PageFailures(items)).toEqual(
+      expect.arrayContaining([expect.stringContaining('roofing jobs but the summary counts 7')]),
+    )
+  })
+
+  it('applies the common checks to every paged job (R19, R17 c)', () => {
+    const unsourced = q1Pages()
+    delete (unsourced[5] as JsonObject).sources
+    expect(q1PageFailures(unsourced)).toEqual(
+      expect.arrayContaining([expect.stringContaining('R19 item without sources')]),
+    )
+    const house = q1Pages()
+    ;(house[3] as JsonObject).address = '4518 Live Oak St'
+    expect(q1PageFailures(house)).toEqual(
+      expect.arrayContaining([expect.stringContaining('R17 house number')]),
+    )
+  })
+
+  it('fails a summary total that is not the sum of the trade counts', () => {
+    const a = q1Answer()
+    a.total = 1006
+    expect(failuresOf('Q1', a)).toEqual([expect.stringContaining('not the sum')])
   })
 })
 

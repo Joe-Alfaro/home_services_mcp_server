@@ -1,0 +1,96 @@
+{
+  "exported_at": "2026-11-02",
+  "providers": [
+    {
+      "profile_id": "pf_q1_01",
+      "business_name": "Quarry Hill Air",
+      "owner_name": "Alder Ashcombe",
+      "phone": "214-555-0701",
+      "email": "office@quarryhillair.example.com",
+      "trades": ["hvac"],
+      "does_not_do": [],
+      "service_zips": ["75204"],
+      "hours": "Mon-Fri 8am-5pm",
+      "crew_size": 2,
+      "crm": "Workiz"
+    },
+    {
+      "profile_id": "pf_q1_02",
+      "business_name": "Thistle Bend Plumbing",
+      "owner_name": "Briony Brindle",
+      "phone": "214-555-0702",
+      "email": "office@thistlebendplumbing.example.com",
+      "trades": ["plumbing"],
+      "does_not_do": [],
+      "service_zips": ["75204"],
+      "hours": "Mon-Fri 8am-5pm",
+      "crew_size": 2,
+      "crm": "Workiz"
+    },
+    {
+      "profile_id": "pf_q1_03",
+      "business_name": "Wren Meadow Cleaning",
+      "owner_name": "Caspian Corvane",
+      "phone": "214-555-0703",
+      "email": "office@wrenmeadowcleaning.example.com",
+      "trades": ["cleaning"],
+      "does_not_do": [],
+      "service_zips": ["75204"],
+      "hours": "Mon-Fri 8am-5pm",
+      "crew_size": 2,
+      "crm": "Workiz"
+    },
+    {
+      "profile_id": "pf_q1_04",
+      "business_name": "Vesper Spark Electric",
+      "owner_name": "Delphine Dunmore",
+      "phone": "214-555-0704",
+      "email": "office@vespersparkelectric.example.com",
+      "trades": ["electrical"],
+      "does_not_do": [],
+      "service_zips": ["75204"],
+      "hours": "Mon-Fri 8am-5pm",
+      "crew_size": 2,
+      "crm": "Workiz"
+    },
+    {
+      "profile_id": "pf_q1_05",
+      "business_name": "Oxbow Pest Works",
+      "owner_name": "Emrys Elsworth",
+      "phone": "214-555-0705",
+      "email": "office@oxbowpest.example.com",
+      "trades": ["pest"],
+      "does_not_do": [],
+      "service_zips": ["75204"],
+      "hours": "Mon-Fri 8am-5pm",
+      "crew_size": 2,
+      "crm": "Workiz"
+    },
+    {
+      "profile_id": "pf_q1_06",
+      "business_name": "Larch Point Painting",
+      "owner_name": "Fenella Fairweather",
+      "phone": "214-555-0706",
+      "email": "office@larchpointpainting.example.com",
+      "trades": ["painting"],
+      "does_not_do": [],
+      "service_zips": ["75204"],
+      "hours": "Mon-Fri 8am-5pm",
+      "crew_size": 2,
+      "crm": "Workiz"
+    },
+    {
+      "profile_id": "pf_q1_07",
+      "business_name": "Bramble Lawn Care",
+      "owner_name": "Corin Thistlewood",
+      "phone": "214-555-0707",
+      "email": "office@bramblelawn.example.com",
+      "trades": ["lawn"],
+      "does_not_do": [],
+      "service_zips": ["75204"],
+      "hours": "Mon-Fri 8am-5pm",
+      "crew_size": 1,
+      "crm": "Jobber"
+    }
+  ]
+}
