@@ -127,6 +127,11 @@ export interface JobCandidate {
   isRecurring: boolean
   /** Free-text evidence of a reschedule, e.g. "Rescheduled from 11/1". */
   rescheduleNote: string | null
+  /**
+   * The local date the job moved from, parsed from rescheduleNote (G9). Optional so hand-built
+   * candidates compile; every adapter sets it (null when none).
+   */
+  rescheduledFrom?: LocalDate | null
 }
 
 export interface CalendarBlockCandidate {
@@ -139,8 +144,17 @@ export interface CalendarBlockCandidate {
   timeBasis: TimeBasis
   /** false when TRANSP:TRANSPARENT or STATUS:CANCELLED. */
   busy: boolean
+  /**
+   * ICS STATUS lower-cased, in the engine's BusyStatus vocabulary; missing STATUS is 'confirmed'
+   * (G17). Optional so hand-built candidates compile; the ICS adapter always sets it.
+   */
+  status?: 'confirmed' | 'tentative' | 'cancelled'
   category: 'work' | 'personal' | 'unknown'
   summaryRaw: string | null // server-only
+  /** ICS LOCATION as a free-text address, escapes removed; null when absent. Server-only (G18). */
+  location?: RawAddress | null
+  /** The property the location resolves to, derived by the pipeline; null when unknown (G18). */
+  propertyKey?: PropertyKey | null
   /** Master UID and RRULE when the block came from a recurring event. */
   recurrence: { masterUid: string; rrule: string } | null
 }
@@ -153,6 +167,11 @@ export interface DeclaredHoursCandidate {
   /** Parsed weekly windows in local time; weekday 1 = Monday … 7 = Sunday (ISO, luxon). */
   weekly: Array<{ weekday: 1 | 2 | 3 | 4 | 5 | 6 | 7; start: string; end: string }> // "HH:mm"
   parsed: 'full' | 'partial' | 'none'
+  /**
+   * True for "24/7"-style hours: a claim, not a working pattern, so the engine ignores the
+   * declared hours (G20). Optional so hand-built candidates compile; the profiles adapter sets it.
+   */
+  alwaysOpen?: boolean
 }
 
 export type Candidate =

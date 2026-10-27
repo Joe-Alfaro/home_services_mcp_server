@@ -5,10 +5,12 @@ import type {
   Instant,
   JobCandidate,
   JobStatus,
+  LocalDate,
   SourceFile,
   SourceRef,
   SourceSystem,
 } from './types.ts'
+import { DateTime } from 'luxon'
 import { applyLimboRule } from '../normalize/status.ts'
 import { isAmbiguousLocal, localDateOf, localToInstant } from '../normalize/time.ts'
 
@@ -152,9 +154,31 @@ export function joinName(first: string | null, last: string | null): string | nu
   return nullIfBlank(compact([first, last]).join(' '))
 }
 
-/** "Rescheduled from M/D per customer" notes are kept as reschedule evidence (G9). */
+/**
+ * "Rescheduled from M/D per customer" notes are kept as reschedule evidence (G9). A to-do such as
+ * "need to reschedule" says nothing has moved yet, so it is not evidence.
+ */
 export function rescheduleNoteOf(note: string | null): string | null {
-  return note !== null && /reschedul/i.test(note) ? note : null
+  return note !== null && /\brescheduled\b/i.test(note) ? note : null
+}
+
+/**
+ * The local date a job moved from, read from "Rescheduled from M/D". The note has no year, so the
+ * year is the latest one that puts M/D on or before the job's own local date (G9, D-078).
+ */
+export function rescheduledFromOf(
+  note: string | null,
+  jobDate: LocalDate | null,
+): LocalDate | null {
+  if (note === null || jobDate === null) return null
+  const match = /\brescheduled\s+from\s+(\d{1,2})\/(\d{1,2})\b/i.exec(note)
+  if (match === null) return null
+  const [month, day] = [Number(match[1]), Number(match[2])]
+  const jobYear = Number(jobDate.slice(0, 4))
+  const candidate = (year: number) => DateTime.fromObject({ year, month, day }).toISODate()
+  const sameYear = candidate(jobYear)
+  if (sameYear === null) return null
+  return sameYear <= jobDate ? sameYear : candidate(jobYear - 1)
 }
 
 // --- status ------------------------------------------------------------------------------------
@@ -230,5 +254,12 @@ export function finishJob(
       makeIssue(job.ref, 'warn', 'time.suspect_date', 'Completed item is dated after today'),
     )
   }
-  return { ...job, status: applyLimboRule(job.status, { startAt, endAt }, ctx.now) }
+  return {
+    ...job,
+    status: applyLimboRule(job.status, { startAt, endAt }, ctx.now),
+    rescheduledFrom: rescheduledFromOf(
+      job.rescheduleNote,
+      startAt === null ? null : localDateOf(startAt),
+    ),
+  }
 }

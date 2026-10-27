@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs'
 import pg from 'pg'
 import { adapters } from '../adapters/registry.ts'
 import type { AdapterContext, SourceSystem } from '../adapters/types.ts'
-import { loadConfig, TIME_ZONE } from '../config.ts'
+import { ingestTimestamp, loadConfig, TIME_ZONE } from '../config.ts'
 import { writeIngest } from '../db/ingest.ts'
 import { claimedBy, listSourcePaths, readSourceFiles } from '../ingest/files.ts'
 import { formatSummary, runAdapters, summarize } from '../ingest/run.ts'
@@ -20,7 +20,7 @@ if (!existsSync(config.dataPackDir)) {
 const ctx: AdapterContext = {
   dataPackDir: config.dataPackDir,
   // Provenance timestamp of this run; "today" and "now" come from config, never the clock.
-  ingestedAt: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
+  ingestedAt: ingestTimestamp(),
   today: config.today,
   now: config.now,
   timeZone: TIME_ZONE,

@@ -70,3 +70,13 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     timeZone: TIME_ZONE,
   }
 }
+
+/**
+ * The ingest run's provenance timestamp: a UTC instant without milliseconds. This is the only
+ * place src/ reads the system clock; it is never used for "today" or "now" (R14).
+ */
+export function ingestTimestamp(clock: () => Date = () => new Date()): string {
+  return clock()
+    .toISOString()
+    .replace(/\.\d{3}Z$/, 'Z')
+}
