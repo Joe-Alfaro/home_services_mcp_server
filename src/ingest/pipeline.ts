@@ -3,7 +3,7 @@ import path from 'node:path'
 import pg from 'pg'
 import { adapters } from '../adapters/registry.ts'
 import type { AdapterContext, SourceSystem } from '../adapters/types.ts'
-import { TIME_ZONE } from '../config.ts'
+import { ingestTimestamp, TIME_ZONE } from '../config.ts'
 import { clearCanonical, writeCanonical, writeStreetSegments } from '../db/canonical.ts'
 import { insertIngest } from '../db/ingest.ts'
 import { migrate } from '../db/migrate.ts'
@@ -25,6 +25,8 @@ export interface PipelineOptions {
   today: string
   /** UTC instant, e.g. "2026-11-02T06:00:00Z". */
   now: string
+  /** Provenance timestamp of the run; defaults to ingestTimestamp() (R14). */
+  ingestedAt?: string
 }
 
 /** Row counts of the canonical model, for the setup summary. */
@@ -54,7 +56,7 @@ function countByMethod(links: readonly { method: string }[]): Record<string, num
 export async function runPipeline(options: PipelineOptions): Promise<PipelineResult> {
   const ctx: AdapterContext = {
     dataPackDir: options.dataPackDir,
-    ingestedAt: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
+    ingestedAt: options.ingestedAt ?? ingestTimestamp(),
     today: options.today,
     now: options.now,
     timeZone: TIME_ZONE,

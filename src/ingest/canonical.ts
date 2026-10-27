@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import type {
+  CalendarBlockCandidate,
   Candidate,
   CandidateBatch,
   DeclaredHoursCandidate,
@@ -8,6 +9,7 @@ import type {
   SourceRef,
   SourceSystem,
 } from '../adapters/types.ts'
+import { normalizeAddress } from '../normalize/address.ts'
 import type { StreetIndex } from '../normalize/geocode.ts'
 import { normalizePhone } from '../normalize/phone.ts'
 import { redactText } from '../normalize/redact.ts'
@@ -264,6 +266,30 @@ function crmConflict(
   ]
 }
 
+/**
+ * G18, D-085: each block's LOCATION normalized like a property address. A location that names a
+ * known property maps to it; any other full address (house number and street) maps to a home of
+ * its own, so the resolver refuses a mirror to a job at a different known home. Locations without
+ * a full address stay unknown (time-only mirroring, D-021).
+ */
+function withBlockProperties(
+  blocks: readonly CalendarBlockCandidate[],
+  index: StreetIndex,
+  propertyIdByKey: ReadonlyMap<string, string>,
+  propertyIdByAddress: ReadonlyMap<string, string>,
+): { blocks: CalendarBlockCandidate[]; propertyIdByKey: Map<string, string> } {
+  const byKey = new Map(propertyIdByKey)
+  const located = blocks.map((block) => {
+    if (block.location === undefined || block.location === null) return block
+    const address = normalizeAddress(block.location, index)
+    if (address.houseNumber === null || address.streetName === null) return block
+    const propertyKey = `${block.providerKey}:location:${address.key}`
+    byKey.set(propertyKey, propertyIdByAddress.get(address.key) ?? `location:${address.key}`)
+    return { ...block, propertyKey }
+  })
+  return { blocks: located, propertyIdByKey: byKey }
+}
+
 export function buildCanonical(
   batches: readonly CandidateBatch[],
   index: StreetIndex,
@@ -276,11 +302,17 @@ export function buildCanonical(
 
   const providerResolution = resolveProviders(providerCandidates)
   const propertyResolution = resolveProperties(propertyCandidates, index)
+  const located = withBlockProperties(
+    blockCandidates,
+    index,
+    propertyResolution.propertyIdByKey,
+    new Map(propertyResolution.properties.map((p) => [p.addressKey, p.id])),
+  )
   const jobResolution = resolveJobs({
     jobs: jobCandidates,
-    calendarBlocks: blockCandidates,
+    calendarBlocks: located.blocks,
     providerIdByKey: providerResolution.providerIdByKey,
-    propertyIdByKey: propertyResolution.propertyIdByKey,
+    propertyIdByKey: located.propertyIdByKey,
   })
   const { providerIdByKey } = providerResolution
 

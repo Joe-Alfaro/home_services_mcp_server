@@ -272,7 +272,7 @@ export function resolveProviders(candidates: readonly ProviderInput[]): Provider
     const roots = new Set(owners.map(({ k }) => sets.find(k)))
     const [owner] = owners
     if (owner === undefined) return
-    const evidence = { matchedOn: 'owner_name' }
+    const evidence = { matchedOn: 'owner_name', normalizedName: calendarName }
     if (roots.size > 1) {
       decide(i, owner.k, 'calendar_owner', 'rejected', { ...evidence, reason: 'ambiguous_owner' })
       return
