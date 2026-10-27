@@ -6,6 +6,7 @@ import {
   loadPipeline,
   loadServer,
   NOW,
+  PACK_DIR,
   readerUrl,
   runPackPipeline,
   startPostgres,
@@ -50,25 +51,22 @@ function textOf(content: unknown): string {
     .join('\n')
 }
 
-/**
- * Ingests the fixture pack into a throwaway Postgres, then connects an in-memory MCP client to
- * the server built on a pool logged in as the read-only role (R16).
- */
-export async function startMcpHarness(): Promise<McpHarness> {
-  const container: StartedPostgreSqlContainer = await startPostgres()
-  const adminUrl = container.getConnectionUri()
-  try {
-    await runPackPipeline(await loadPipeline(), adminUrl)
-  } catch (error) {
-    await container.stop()
-    throw error
-  }
-  const admin = new pg.Client({ connectionString: adminUrl })
-  await admin.connect()
-  const reader = new pg.Pool({ connectionString: await readerUrl(admin, adminUrl), max: 4 })
+export interface ServerConnection {
+  client: Client
+  call: (name: string, args: Record<string, unknown>) => Promise<ToolCall>
+  close: () => Promise<void>
+}
 
+/**
+ * Connects an in-memory MCP client to a new server on `reader` with the given clock, so one
+ * ingested database can be queried as of different "today"/"now" values (R14).
+ */
+export async function connectServer(
+  reader: pg.Pool,
+  clock: { today: string; now: string },
+): Promise<ServerConnection> {
   const serverModule = await loadServer()
-  const server = serverModule.createServer({ pool: reader, today: TODAY, now: NOW })
+  const server = serverModule.createServer({ pool: reader, ...clock })
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
   const client = new Client({ name: 'integration-test', version: '0.0.0' })
   await server.connect(serverTransport)
@@ -92,11 +90,38 @@ export async function startMcpHarness(): Promise<McpHarness> {
   async function close(): Promise<void> {
     await client.close()
     await server.close()
+  }
+
+  return { client, call, close }
+}
+
+/**
+ * Ingests a fixture pack (the main pack unless `packDir` says otherwise) into a throwaway
+ * Postgres, then connects an in-memory MCP client to the server built on a pool logged in as the
+ * read-only role (R16).
+ */
+export async function startMcpHarness(packDir = PACK_DIR): Promise<McpHarness> {
+  const container: StartedPostgreSqlContainer = await startPostgres()
+  const adminUrl = container.getConnectionUri()
+  try {
+    await runPackPipeline(await loadPipeline(), adminUrl, packDir)
+  } catch (error) {
+    await container.stop()
+    throw error
+  }
+  const admin = new pg.Client({ connectionString: adminUrl })
+  await admin.connect()
+  const reader = new pg.Pool({ connectionString: await readerUrl(admin, adminUrl), max: 4 })
+  const connection = await connectServer(reader, { today: TODAY, now: NOW })
+
+  async function close(): Promise<void> {
+    await connection.close()
     await reader.end()
     await admin.end()
     await container.stop()
   }
 
+  const { client, call } = connection
   return { client, admin, reader, call, close }
 }
 

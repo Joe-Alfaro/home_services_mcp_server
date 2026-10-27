@@ -1,0 +1,511 @@
+{
+  "data": {
+    "account": {
+      "id": "acct-nj-01",
+      "name": "Nightjar Garage Doors",
+      "phone": "214-555-0320",
+      "owner": {
+        "name": "Odessa Pellham"
+      },
+      "industry": "Garage Doors"
+    },
+    "clients": {
+      "nodes": [
+        {
+          "id": "client-nj-01",
+          "firstName": "Cordelia",
+          "lastName": "Ashby",
+          "companyName": null,
+          "isCompany": false,
+          "emails": [],
+          "phones": [
+            {
+              "number": "469-555-0341",
+              "primary": true
+            }
+          ],
+          "createdAt": "2024-09-01T15:00:00Z",
+          "properties": {
+            "nodes": [
+              {
+                "id": "prop-nj-01",
+                "address": {
+                  "street1": "1530 Tupelo Ave",
+                  "street2": null,
+                  "city": "Dallas",
+                  "province": "TX",
+                  "postalCode": "75214",
+                  "country": "US"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "client-nj-02",
+          "firstName": "Percival",
+          "lastName": "Danforth",
+          "companyName": null,
+          "isCompany": false,
+          "emails": [],
+          "phones": [
+            {
+              "number": "972-555-0342",
+              "primary": true
+            }
+          ],
+          "createdAt": "2024-09-01T15:00:00Z",
+          "properties": {
+            "nodes": [
+              {
+                "id": "prop-nj-02",
+                "address": {
+                  "street1": "2010 Sorrel Ln",
+                  "street2": null,
+                  "city": "Dallas",
+                  "province": "TX",
+                  "postalCode": "75214",
+                  "country": "US"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "client-nj-03",
+          "firstName": "Winifred",
+          "lastName": "Hollis",
+          "companyName": null,
+          "isCompany": false,
+          "emails": [],
+          "phones": [
+            {
+              "number": "214-555-0343",
+              "primary": true
+            }
+          ],
+          "createdAt": "2024-09-01T15:00:00Z",
+          "properties": {
+            "nodes": [
+              {
+                "id": "prop-nj-03",
+                "address": {
+                  "street1": "1520 Tupelo Ave",
+                  "street2": null,
+                  "city": "Dallas",
+                  "province": "TX",
+                  "postalCode": "75214",
+                  "country": "US"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "jobs": {
+      "nodes": [
+        {
+          "id": "job-nj-01",
+          "jobNumber": 901,
+          "title": "Spring replacement",
+          "jobType": "ONE_OFF",
+          "jobStatus": "archived",
+          "createdAt": "2024-09-01T15:00:00Z",
+          "client": {
+            "id": "client-nj-01"
+          },
+          "property": {
+            "id": "prop-nj-01"
+          },
+          "total": null,
+          "recurrence": null,
+          "instructions": null,
+          "visits": {
+            "nodes": [
+              {
+                "id": "visit-nj-01",
+                "title": null,
+                "startAt": "2026-10-20T14:00:00Z",
+                "endAt": "2026-10-20T17:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2026-10-20T17:00:00Z",
+                "invoicedAmount": "180.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Odessa Pellham"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "job-nj-02",
+          "jobNumber": 902,
+          "title": "Opener repair",
+          "jobType": "ONE_OFF",
+          "jobStatus": "archived",
+          "createdAt": "2024-09-01T15:00:00Z",
+          "client": {
+            "id": "client-nj-02"
+          },
+          "property": {
+            "id": "prop-nj-02"
+          },
+          "total": null,
+          "recurrence": null,
+          "instructions": null,
+          "visits": {
+            "nodes": [
+              {
+                "id": "visit-nj-02",
+                "title": null,
+                "startAt": "2026-10-22T18:00:00Z",
+                "endAt": "2026-10-22T21:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2026-10-22T21:00:00Z",
+                "invoicedAmount": "180.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Odessa Pellham"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "job-nj-03",
+          "jobNumber": 903,
+          "title": "Track alignment",
+          "jobType": "ONE_OFF",
+          "jobStatus": "archived",
+          "createdAt": "2024-09-01T15:00:00Z",
+          "client": {
+            "id": "client-nj-02"
+          },
+          "property": {
+            "id": "prop-nj-02"
+          },
+          "total": null,
+          "recurrence": null,
+          "instructions": null,
+          "visits": {
+            "nodes": [
+              {
+                "id": "visit-nj-03",
+                "title": null,
+                "startAt": "2026-10-27T14:00:00Z",
+                "endAt": "2026-10-27T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2026-10-27T16:00:00Z",
+                "invoicedAmount": "180.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Odessa Pellham"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "job-nj-04",
+          "jobNumber": 904,
+          "title": "Cable repair",
+          "jobType": "ONE_OFF",
+          "jobStatus": "archived",
+          "createdAt": "2024-09-01T15:00:00Z",
+          "client": {
+            "id": "client-nj-01"
+          },
+          "property": {
+            "id": "prop-nj-01"
+          },
+          "total": null,
+          "recurrence": null,
+          "instructions": null,
+          "visits": {
+            "nodes": [
+              {
+                "id": "visit-nj-04",
+                "title": null,
+                "startAt": "2024-11-02T02:00:00Z",
+                "endAt": "2024-11-02T04:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2024-11-02T04:00:00Z",
+                "invoicedAmount": "180.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Odessa Pellham"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "job-nj-05",
+          "jobNumber": 905,
+          "title": "Roller replacement",
+          "jobType": "ONE_OFF",
+          "jobStatus": "archived",
+          "createdAt": "2024-09-01T15:00:00Z",
+          "client": {
+            "id": "client-nj-01"
+          },
+          "property": {
+            "id": "prop-nj-01"
+          },
+          "total": null,
+          "recurrence": null,
+          "instructions": null,
+          "visits": {
+            "nodes": [
+              {
+                "id": "visit-nj-05",
+                "title": null,
+                "startAt": "2024-11-02T05:30:00Z",
+                "endAt": "2024-11-02T06:30:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2024-11-02T06:30:00Z",
+                "invoicedAmount": "180.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Odessa Pellham"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "job-nj-06",
+          "jobNumber": 906,
+          "title": "Weather seal",
+          "jobType": "ONE_OFF",
+          "jobStatus": "archived",
+          "createdAt": "2024-09-01T15:00:00Z",
+          "client": {
+            "id": "client-nj-01"
+          },
+          "property": {
+            "id": "prop-nj-01"
+          },
+          "total": null,
+          "recurrence": null,
+          "instructions": null,
+          "visits": {
+            "nodes": [
+              {
+                "id": "visit-nj-06",
+                "title": null,
+                "startAt": "2024-11-08T16:00:00Z",
+                "endAt": "2024-11-08T17:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2024-11-08T17:00:00Z",
+                "invoicedAmount": "180.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Odessa Pellham"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "job-nj-07",
+          "jobNumber": 907,
+          "title": "Opener install",
+          "jobType": "ONE_OFF",
+          "jobStatus": "upcoming",
+          "createdAt": "2024-09-01T15:00:00Z",
+          "client": {
+            "id": "client-nj-03"
+          },
+          "property": {
+            "id": "prop-nj-03"
+          },
+          "total": null,
+          "recurrence": null,
+          "instructions": null,
+          "visits": {
+            "nodes": [
+              {
+                "id": "visit-nj-07",
+                "title": null,
+                "startAt": "2026-11-16T05:30:00Z",
+                "endAt": "2026-11-16T06:15:00Z",
+                "visitStatus": "UPCOMING",
+                "completedAt": null,
+                "invoicedAmount": null,
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Odessa Pellham"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "job-nj-08",
+          "jobNumber": 908,
+          "title": "Panel swap",
+          "jobType": "ONE_OFF",
+          "jobStatus": "upcoming",
+          "createdAt": "2024-09-01T15:00:00Z",
+          "client": {
+            "id": "client-nj-03"
+          },
+          "property": {
+            "id": "prop-nj-03"
+          },
+          "total": null,
+          "recurrence": null,
+          "instructions": null,
+          "visits": {
+            "nodes": [
+              {
+                "id": "visit-nj-08",
+                "title": null,
+                "startAt": "2026-11-16T06:30:00Z",
+                "endAt": "2026-11-16T07:00:00Z",
+                "visitStatus": "UPCOMING",
+                "completedAt": null,
+                "invoicedAmount": null,
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Odessa Pellham"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "job-nj-09",
+          "jobNumber": 909,
+          "title": "Sensor fix",
+          "jobType": "ONE_OFF",
+          "jobStatus": "upcoming",
+          "createdAt": "2024-09-01T15:00:00Z",
+          "client": {
+            "id": "client-nj-03"
+          },
+          "property": {
+            "id": "prop-nj-03"
+          },
+          "total": null,
+          "recurrence": null,
+          "instructions": null,
+          "visits": {
+            "nodes": [
+              {
+                "id": "visit-nj-09",
+                "title": null,
+                "startAt": "2026-11-23T05:30:00Z",
+                "endAt": "2026-11-23T06:15:00Z",
+                "visitStatus": "UPCOMING",
+                "completedAt": null,
+                "invoicedAmount": null,
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Odessa Pellham"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "job-nj-10",
+          "jobNumber": 910,
+          "title": "Keypad install",
+          "jobType": "ONE_OFF",
+          "jobStatus": "upcoming",
+          "createdAt": "2024-09-01T15:00:00Z",
+          "client": {
+            "id": "client-nj-03"
+          },
+          "property": {
+            "id": "prop-nj-03"
+          },
+          "total": null,
+          "recurrence": null,
+          "instructions": null,
+          "visits": {
+            "nodes": [
+              {
+                "id": "visit-nj-10",
+                "title": null,
+                "startAt": "2026-11-23T06:30:00Z",
+                "endAt": "2026-11-23T07:00:00Z",
+                "visitStatus": "UPCOMING",
+                "completedAt": null,
+                "invoicedAmount": null,
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Odessa Pellham"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  },
+  "extensions": {
+    "exportedAt": "2026-11-02T06:00:00Z",
+    "apiVersion": "2025-04-16"
+  }
+}
