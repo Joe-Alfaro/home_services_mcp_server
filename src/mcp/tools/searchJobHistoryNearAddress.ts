@@ -23,7 +23,7 @@ const DESCRIPTION = `Completed home-service work near a street address: per-trad
 
 Use when the question is "what work has been done near <address>" or "how many <trade> jobs within <distance> of <address>". Counts completed jobs only: estimates, cancelled and future work are excluded, and the visits of one recurring CRM job count as one job. Distance is straight-line between geocoded homes; addresses that cannot be placed on the street map are not counted.
 
-Answer from "total" and the per-trade counts in "groups" (each with up to ${String(MAX_SAMPLES)} sample jobs and their sources). "jobs" is one page of the full job list (newest first within each trade, trades in the order of "groups"); page only if you need the individual jobs: call again with the same arguments plus cursor = the previous response's nextCursor, until nextCursor is null. limit sets the page size; trade restricts the paged list to one trade (the counts always cover every trade).
+Answer from "total" and the per-trade counts in "byTrade"; "groups" repeats each count with up to ${String(MAX_SAMPLES)} sample jobs and their sources. "jobs" is one page of the full job list (newest first within each trade, trades in the order of "groups"); page only if you need the individual jobs: call again with the same arguments plus cursor = the previous response's nextCursor, until nextCursor is null. limit sets the page size; trade restricts the paged list to one trade (the counts always cover every trade).
 
 Do not use it for one home's own history (use get_property_service_history instead), for upcoming bookings on a block (use get_scheduled_work_on_block), or to pick a provider (use find_providers or rank_providers_for_job).
 
@@ -269,6 +269,8 @@ export async function searchJobHistoryNearAddress(input: Input, options: ServerO
       ...(input.trade === undefined ? {} : { trade: input.trade }),
     },
     total,
+    // The answer first, compact: one { trade, count } per trade, in the order of groups (D-142).
+    byTrade: groups.map((group) => ({ trade: group.trade, count: group.jobs.length })),
     groups: groups.map((group) => {
       const sampleJobs = group.jobs.slice(0, MAX_SAMPLES)
       return {
@@ -287,7 +289,7 @@ export async function searchJobHistoryNearAddress(input: Input, options: ServerO
       'Counts completed jobs whose end falls in the window; estimates, cancelled and future work are excluded.',
       'Visits of one recurring CRM job count once (see "visits").',
       'Distance is straight-line between interpolated home locations.',
-      'Answer from total and groups[].count; page "jobs" with nextCursor only if the individual jobs are needed.',
+      'Answer from total and byTrade; page "jobs" with nextCursor only if the individual jobs are needed.',
     ],
   }
 }

@@ -100,8 +100,8 @@ const UTC_INSTANT = /\b\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?Z\b/g
 
 /**
  * Rewrites every UTC ("Z") date-time inside free text to its America/Chicago form, so engine
- * reasons and ICS occurrence ids ("<UID>@<start>") show local offsets like every other time.
- * The instant is unchanged, so a citation still identifies the same occurrence.
+ * reasons show local offsets like every other time. Never apply it to identifiers: a cited ICS
+ * occurrence ID ("<UID>@<start>") must stay the stored string (R19, D-141).
  */
 export function localizeInstants(text: string): string {
   return text.replace(UTC_INSTANT, (match) => presentInstant(match))
