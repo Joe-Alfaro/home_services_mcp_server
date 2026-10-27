@@ -106,6 +106,8 @@ export interface Job {
   completedAt: Date | null
   allDay: boolean
   description: string | null
+  /** G9: the local date "YYYY-MM-DD" the job moved from; null when not rescheduled. */
+  rescheduledFrom: string | null
   duplicateCount: number
   confidence: number
   blockNumber: number | null
@@ -133,6 +135,7 @@ interface JobRow {
   completed_at: Date | null
   all_day: boolean
   description: string | null
+  rescheduled_from: string | null
   duplicate_count: number
   confidence: string
   block_number: number | null
@@ -162,6 +165,7 @@ function toJob(row: JobRow): Job {
     completedAt: row.completed_at,
     allDay: row.all_day,
     description: row.description,
+    rescheduledFrom: row.rescheduled_from,
     duplicateCount: row.duplicate_count,
     confidence: Number(row.confidence),
     blockNumber: row.block_number,
@@ -197,7 +201,7 @@ export async function loadJobs(
   const { rows } = await pool.query<JobRow>(
     `SELECT j.id, j.provider_id, j.provider_name, j.parent_job_id, j.kind, j.status, j.trade,
             j.service, j.start_at, j.end_at, j.completed_at, j.all_day, j.description,
-            j.duplicate_count, j.confidence, j.block_number, j.block_label, j.street_name,
+            to_char(j.rescheduled_from, 'YYYY-MM-DD') AS rescheduled_from, j.duplicate_count, j.confidence, j.block_number, j.block_label, j.street_name,
             j.street_type, j.zip, j.lat, j.lon, j.source_systems, j.sources,
             -- Correlated, not a join on v_entity_sources: that aggregates every entity (Q1 50 s).
             (SELECT jsonb_agg(jsonb_build_object('sourceSystem', s.source_system,

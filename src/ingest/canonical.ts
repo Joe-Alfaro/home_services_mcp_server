@@ -10,14 +10,14 @@ import type {
   SourceRef,
   SourceSystem,
 } from '../adapters/types.ts'
-import { normalizeAddress } from '../normalize/address.ts'
+import { addressKey, normalizeAddress, type NormalizedAddress } from '../normalize/address.ts'
 import type { StreetIndex } from '../normalize/geocode.ts'
 import { normalizePhone } from '../normalize/phone.ts'
 import { redactText } from '../normalize/redact.ts'
 import { classifyJob, type TradeConflict } from '../normalize/trade.ts'
 import { refKey, stableId } from '../resolve/ids.ts'
 import { resolveJobs } from '../resolve/jobs.ts'
-import { resolveProperties } from '../resolve/properties.ts'
+import { resolveProperties, type ResolvedProperty } from '../resolve/properties.ts'
 import { resolveProviders, type ResolvedProvider } from '../resolve/providers.ts'
 
 /*
@@ -117,6 +117,8 @@ export interface JobRow {
   isRecurring: boolean
   descriptionRedacted: string | null
   rescheduleNoteRedacted: string | null
+  /** G9: the local date "YYYY-MM-DD" the job moved from; its old slot never blocks. */
+  rescheduledFrom: string | null
   duplicateCount: number
   confidence: number
 }
@@ -128,6 +130,8 @@ export interface DeclaredHoursRow {
   endLocal: string
   record: RecordKey
   parsed: DeclaredHoursCandidate['parsed']
+  /** G20: the profile claims 24/7; openings then come from observed hours. */
+  alwaysOpen: boolean
 }
 
 export interface CalendarBlockRow {
@@ -142,6 +146,8 @@ export interface CalendarBlockRow {
   recurrenceUid: string | null
   mirroredJobId: string | null
   mirrorConfidence: number | null
+  /** G17: a tentative hold still blocks, at low confidence. */
+  status: NonNullable<CalendarBlockCandidate['status']>
   record: RecordKey
 }
 
@@ -171,6 +177,11 @@ export interface CanonicalModel {
 
 /** provider_links method for a job record tied to its provider through its account. */
 export const ACCOUNT_RECORD_METHOD = 'account_record'
+/**
+ * R8 (c): a job record belongs to its account by construction, so the account_record tier is
+ * certain on its own; its link carries this times the account's own match confidence.
+ */
+export const ACCOUNT_RECORD_CONFIDENCE = 1
 
 const TIME_ZONE = 'America/Chicago'
 
@@ -344,28 +355,52 @@ function hoursConflict(
   ]
 }
 
+/** Home identity without the zip: number + street + type + unit. */
+function zipFreeIdentity(address: NormalizedAddress): string {
+  return addressKey({ ...address, zip: null })
+}
+
 /**
  * G18, D-085: each block's LOCATION normalized like a property address. A location that names a
  * known property maps to it; any other full address (house number and street) maps to a home of
  * its own, so the resolver refuses a mirror to a job at a different known home. Locations without
  * a full address stay unknown (time-only mirroring, D-021).
+ * G18, D-122: `sameHome` tells the resolver that two homes with the same number, street and unit
+ * are one address when only one side has a zip (a zip-less CSV row and a zipped CRM record or
+ * LOCATION of the same house are often two property rows).
  */
 function withBlockProperties(
   blocks: readonly CalendarBlockCandidate[],
   index: StreetIndex,
   propertyIdByKey: ReadonlyMap<string, string>,
-  propertyIdByAddress: ReadonlyMap<string, string>,
-): { blocks: CalendarBlockCandidate[]; propertyIdByKey: Map<string, string> } {
+  properties: readonly ResolvedProperty[],
+): {
+  blocks: CalendarBlockCandidate[]
+  propertyIdByKey: Map<string, string>
+  sameHome: (a: string, b: string) => boolean
+} {
   const byKey = new Map(propertyIdByKey)
+  const propertyIdByAddress = new Map(properties.map((p) => [p.addressKey, p.id]))
+  const addressById = new Map(properties.map((p) => [p.id, p.address]))
   const located = blocks.map((block) => {
     if (block.location === undefined || block.location === null) return block
     const address = normalizeAddress(block.location, index)
     if (address.houseNumber === null || address.streetName === null) return block
     const propertyKey = `${block.providerKey}:location:${address.key}`
-    byKey.set(propertyKey, propertyIdByAddress.get(address.key) ?? `location:${address.key}`)
+    const propertyId = propertyIdByAddress.get(address.key) ?? `location:${address.key}`
+    byKey.set(propertyKey, propertyId)
+    if (!addressById.has(propertyId)) addressById.set(propertyId, address)
     return { ...block, propertyKey }
   })
-  return { blocks: located, propertyIdByKey: byKey }
+  function sameHome(a: string, b: string): boolean {
+    const left = addressById.get(a)
+    const right = addressById.get(b)
+    if (left === undefined || right === undefined) return false
+    if (left.houseNumber === null || left.streetName === null) return false
+    if ((left.zip === null) === (right.zip === null)) return false
+    return zipFreeIdentity(left) === zipFreeIdentity(right)
+  }
+  return { blocks: located, propertyIdByKey: byKey, sameHome }
 }
 
 export function buildCanonical(
@@ -384,13 +419,14 @@ export function buildCanonical(
     blockCandidates,
     index,
     propertyResolution.propertyIdByKey,
-    new Map(propertyResolution.properties.map((p) => [p.addressKey, p.id])),
+    propertyResolution.properties,
   )
   const jobResolution = resolveJobs({
     jobs: jobCandidates,
     calendarBlocks: located.blocks,
     providerIdByKey: providerResolution.providerIdByKey,
     propertyIdByKey: located.propertyIdByKey,
+    sameHome: located.sameHome,
   })
   const { providerIdByKey } = providerResolution
 
@@ -441,6 +477,7 @@ export function buildCanonical(
       isRecurring: primary?.isRecurring ?? false,
       descriptionRedacted: redactText(text, { names }),
       rescheduleNoteRedacted: redactText(primary?.rescheduleNote ?? null, { names }),
+      rescheduledFrom: primary?.rescheduledFrom ?? null,
       duplicateCount: job.duplicateCount,
       confidence: job.confidence,
     }
@@ -577,8 +614,12 @@ export function buildCanonical(
         entityId: providerId,
         record: recordKeyOf(job.ref, 'job'),
         method: ACCOUNT_RECORD_METHOD,
-        confidence: accountLink.confidence,
-        evidence: { providerKey: job.providerKey, accountMethod: accountLink.method },
+        confidence: accountLink.confidence * ACCOUNT_RECORD_CONFIDENCE,
+        evidence: {
+          providerKey: job.providerKey,
+          accountMethod: accountLink.method,
+          accountConfidence: accountLink.confidence,
+        },
       },
     ]
   })
@@ -640,6 +681,7 @@ export function buildCanonical(
       endLocal: window.end,
       record: recordKeyOf(hours.ref, 'declared_hours'),
       parsed: hours.parsed,
+      alwaysOpen: hours.alwaysOpen ?? false,
     }))
   })
 
@@ -663,6 +705,7 @@ export function buildCanonical(
         recurrenceUid: block.recurrence?.masterUid ?? null,
         mirroredJobId: mirror?.jobId ?? null,
         mirrorConfidence: mirror?.confidence ?? null,
+        status: block.status ?? 'confirmed',
         record: recordKeyOf(block.ref, 'calendar_block'),
       },
     ]

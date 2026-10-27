@@ -139,17 +139,17 @@ export async function writeCanonical(
     `INSERT INTO jobs (id, provider_id, property_id, parent_job_id, kind, status, status_raw,
        trade, service, trade_method, trade_conflict, start_at, end_at, all_day, time_basis,
        completed_at, amount_cents, is_recurring, description_redacted,
-       reschedule_note_redacted, duplicate_count, confidence)
+       reschedule_note_redacted, rescheduled_from, duplicate_count, confidence)
      SELECT id, "providerId", "propertyId", "parentJobId", kind, status, "statusRaw", trade,
        service, "tradeMethod", "tradeConflict", "startAt", "endAt", "allDay", "timeBasis",
        "completedAt", "amountCents", "isRecurring", "descriptionRedacted",
-       "rescheduleNoteRedacted", "duplicateCount", confidence
+       "rescheduleNoteRedacted", "rescheduledFrom", "duplicateCount", confidence
      FROM jsonb_to_recordset($1::jsonb) AS r(id text, "providerId" text, "propertyId" text,
        "parentJobId" text, kind text, status text, "statusRaw" text, trade text, service text,
        "tradeMethod" text, "tradeConflict" jsonb, "startAt" timestamptz, "endAt" timestamptz,
        "allDay" boolean, "timeBasis" text, "completedAt" timestamptz, "amountCents" bigint,
        "isRecurring" boolean, "descriptionRedacted" text, "rescheduleNoteRedacted" text,
-       "duplicateCount" integer, confidence numeric)`,
+       "rescheduledFrom" date, "duplicateCount" integer, confidence numeric)`,
     model.jobs,
   )
   await insertInChunks(
@@ -163,22 +163,23 @@ export async function writeCanonical(
   await insertInChunks(
     client,
     `INSERT INTO declared_hours (provider_id, weekday, start_local, end_local,
-       source_record_id, parsed)
-     SELECT "providerId", weekday, "startLocal"::time, "endLocal"::time, srid, parsed
+       source_record_id, parsed, always_open)
+     SELECT "providerId", weekday, "startLocal"::time, "endLocal"::time, srid, parsed,
+       "alwaysOpen"
      FROM jsonb_to_recordset($1::jsonb) AS r("providerId" text, weekday smallint,
-       "startLocal" text, "endLocal" text, srid bigint, parsed text)`,
+       "startLocal" text, "endLocal" text, srid bigint, parsed text, "alwaysOpen" boolean)`,
     links(model.declaredHours),
   )
   await insertInChunks(
     client,
     `INSERT INTO calendar_blocks (id, provider_id, start_at, end_at, all_day, time_basis, busy,
-       category, recurrence_uid, mirrored_job_id, mirror_confidence, source_record_id)
+       category, recurrence_uid, mirrored_job_id, mirror_confidence, status, source_record_id)
      SELECT id, "providerId", "startAt", "endAt", "allDay", "timeBasis", busy, category,
-       "recurrenceUid", "mirroredJobId", "mirrorConfidence", srid
+       "recurrenceUid", "mirroredJobId", "mirrorConfidence", status, srid
      FROM jsonb_to_recordset($1::jsonb) AS r(id text, "providerId" text,
        "startAt" timestamptz, "endAt" timestamptz, "allDay" boolean, "timeBasis" text,
        busy boolean, category text, "recurrenceUid" text, "mirroredJobId" text,
-       "mirrorConfidence" numeric, srid bigint)`,
+       "mirrorConfidence" numeric, status text, srid bigint)`,
     links(model.calendarBlocks),
   )
   await insertInChunks(

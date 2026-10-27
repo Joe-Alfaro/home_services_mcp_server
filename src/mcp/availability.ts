@@ -44,6 +44,7 @@ interface HoursRow {
   weekday: number
   start_local: string
   end_local: string
+  always_open: boolean
   sources: unknown
 }
 
@@ -55,6 +56,7 @@ interface WorkRow {
   start_at: Date | null
   end_at: Date | null
   all_day: boolean
+  rescheduled_from: string | null
   source_systems: string[]
   sources: unknown
 }
@@ -67,6 +69,8 @@ interface BlockRow {
   busy: boolean
   category: 'work' | 'personal' | 'unknown'
   mirrored_job_id: string | null
+  /** G17: a tentative hold still blocks, at low confidence; a cancelled one never does. */
+  status: 'confirmed' | 'tentative' | 'cancelled'
   sources: unknown
 }
 
@@ -110,13 +114,14 @@ function workBusy(row: WorkRow, mirrors: readonly BlockRow[]): BusyItem {
     confidence: workConfidence(row),
     sources: mergeSources(readSources(row.sources), ...mirrors.map((m) => readSources(m.sources))),
     category: 'work',
+    rescheduledFrom: row.rescheduled_from,
   }
 }
 
 function blockBusy(row: BlockRow): BusyItem {
   return {
     kind: 'calendar_block',
-    status: 'confirmed',
+    status: row.status,
     startAt: row.start_at.toISOString(),
     endAt: row.end_at.toISOString(),
     allDay: row.all_day,
@@ -150,19 +155,22 @@ export async function loadAvailability(
   if (ids.length === 0) return new Map()
   const [hours, work, blocks] = await Promise.all([
     pool.query<HoursRow>(
-      `SELECT provider_id, weekday, start_local, end_local, sources FROM v_declared_hours
+      `SELECT provider_id, weekday, start_local, end_local, always_open, sources
+         FROM v_declared_hours
         WHERE provider_id = ANY ($1) ORDER BY provider_id, weekday, start_local`,
       [ids],
     ),
     // All work, not only the window's: history drives crew concurrency, inferred hours and the
     // outside-hours conflict.
     pool.query<WorkRow>(
-      `SELECT id, provider_id, kind, status, start_at, end_at, all_day, source_systems, sources
+      `SELECT id, provider_id, kind, status, start_at, end_at, all_day,
+              to_char(rescheduled_from, 'YYYY-MM-DD') AS rescheduled_from, source_systems, sources
          FROM v_jobs WHERE provider_id = ANY ($1) AND start_at IS NOT NULL`,
       [ids],
     ),
     pool.query<BlockRow>(
-      `SELECT provider_id, start_at, end_at, all_day, busy, category, mirrored_job_id, sources
+      `SELECT provider_id, start_at, end_at, all_day, busy, category, mirrored_job_id, status,
+              sources
          FROM v_calendar_blocks
         WHERE provider_id = ANY ($1) AND start_at < $3 AND end_at > $2`,
       [ids, window.from, window.to],
@@ -206,6 +214,8 @@ export async function loadAvailability(
         window,
         now,
         minMinutes,
+        // G20: "24/7" is a claim, not a working pattern; the engine infers hours instead.
+        declaredAlwaysOpen: hourRows.some((row) => row.always_open),
       })
       const hoursSources = hourRows.reduce((map, row) => {
         map.set(row.weekday, mergeSources(map.get(row.weekday) ?? [], readSources(row.sources)))
