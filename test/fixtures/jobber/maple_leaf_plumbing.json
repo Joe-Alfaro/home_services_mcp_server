@@ -1,0 +1,300 @@
+{
+  "data": {
+    "account": {
+      "id": "Z2lkOi8vSm9iYmVyL0FjY291bnQvOTAwMDAwMQ",
+      "name": "Maple Leaf Plumbing",
+      "phone": "(214) 555-0142",
+      "owner": { "name": "Dana Whitfield" },
+      "industry": "PLUMBING"
+    },
+    "clients": {
+      "nodes": [
+        {
+          "id": "Z2lkOi8vSm9iYmVyL0NsaWVudC85MDAwMTAx",
+          "firstName": "Corinne",
+          "lastName": "Halvorsen",
+          "companyName": null,
+          "isCompany": false,
+          "emails": [{ "address": "corinne.h@example.org", "primary": true }],
+          "phones": [{ "number": "469-555-0187", "primary": true }],
+          "createdAt": "2024-11-03T15:00:00Z",
+          "properties": {
+            "nodes": [
+              {
+                "id": "Z2lkOi8vSm9iYmVyL1Byb3BlcnR5LzkwMDAyMDE",
+                "address": {
+                  "street1": "4518 Live Oak St",
+                  "street2": "Apt 2",
+                  "city": "Dallas",
+                  "province": "TX",
+                  "postalCode": "75204",
+                  "country": "US"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "Z2lkOi8vSm9iYmVyL0NsaWVudC85MDAwMTAy",
+          "firstName": "Marcus",
+          "lastName": "Pemberton",
+          "companyName": null,
+          "isCompany": false,
+          "emails": [],
+          "phones": [{ "number": "2145550163", "primary": true }],
+          "createdAt": "2025-02-11T18:30:00Z",
+          "properties": {
+            "nodes": [
+              {
+                "id": "Z2lkOi8vSm9iYmVyL1Byb3BlcnR5LzkwMDAyMDI",
+                "address": {
+                  "street1": "5841 belmont ave",
+                  "street2": null,
+                  "city": null,
+                  "province": "Texas",
+                  "postalCode": "75206-1234",
+                  "country": "US"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "Z2lkOi8vSm9iYmVyL0NsaWVudC85MDAwMTAz",
+          "firstName": "Ines",
+          "lastName": "Vargas-Lund",
+          "companyName": null,
+          "isCompany": false,
+          "emails": [{ "address": "ines.vl@example.net", "primary": true }],
+          "phones": [{ "number": "(972) 555-0119", "primary": true }],
+          "createdAt": "2025-06-20T14:00:00Z",
+          "properties": {
+            "nodes": [
+              {
+                "id": "Z2lkOi8vSm9iYmVyL1Byb3BlcnR5LzkwMDAyMDM",
+                "address": {
+                  "street1": "6012 Belmont Ave",
+                  "street2": null,
+                  "city": "DALLAS",
+                  "province": "TX",
+                  "postalCode": null,
+                  "country": "US"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "pageInfo": { "hasNextPage": false }
+    },
+    "jobs": {
+      "nodes": [
+        {
+          "id": "Z2lkOi8vSm9iYmVyL0pvYi85MDAwMzAx",
+          "jobNumber": 1001,
+          "title": "WH replace",
+          "jobType": "ONE_OFF",
+          "jobStatus": "archived",
+          "createdAt": "2026-10-05T16:00:00Z",
+          "client": { "id": "Z2lkOi8vSm9iYmVyL0NsaWVudC85MDAwMTAx" },
+          "property": { "id": "Z2lkOi8vSm9iYmVyL1Byb3BlcnR5LzkwMDAyMDE" },
+          "total": "1234.50",
+          "recurrence": null,
+          "instructions": null,
+          "visits": {
+            "nodes": [
+              {
+                "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzkwMDA0MDE",
+                "title": null,
+                "startAt": "2026-10-12T14:00:00Z",
+                "endAt": "2026-10-12T16:30:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2026-10-12T16:30:00Z",
+                "invoicedAmount": "600.00",
+                "assignedUsers": { "nodes": [{ "name": { "full": "Dana Whitfield" } }] }
+              },
+              {
+                "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzkwMDA0MDI",
+                "title": null,
+                "startAt": "2026-10-14T14:00:00Z",
+                "endAt": "2026-10-14T15:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2026-10-14T15:05:00Z",
+                "invoicedAmount": "634.50",
+                "assignedUsers": { "nodes": [{ "name": { "full": "Dana Whitfield" } }] }
+              },
+              {
+                "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzkwMDA0MDM",
+                "title": null,
+                "startAt": "2026-10-16T14:00:00Z",
+                "endAt": "2026-10-16T15:00:00Z",
+                "visitStatus": "CANCELLED",
+                "completedAt": null,
+                "assignedUsers": { "nodes": [{ "name": { "full": "Dana Whitfield" } }] }
+              }
+            ]
+          }
+        },
+        {
+          "id": "Z2lkOi8vSm9iYmVyL0pvYi85MDAwMzAy",
+          "jobNumber": 1002,
+          "title": "Leaky kitchen faucet",
+          "jobType": "ONE_OFF",
+          "jobStatus": "upcoming",
+          "createdAt": "2026-10-20T19:15:00Z",
+          "client": { "id": "Z2lkOi8vSm9iYmVyL0NsaWVudC85MDAwMTAy" },
+          "property": { "id": "Z2lkOi8vSm9iYmVyL1Byb3BlcnR5LzkwMDAyMDI" },
+          "total": "185.00",
+          "recurrence": null,
+          "instructions": "Rescheduled from 10/29 per customer",
+          "visits": {
+            "nodes": [
+              {
+                "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzkwMDA0MDQ",
+                "title": null,
+                "startAt": "2026-11-03T15:00:00Z",
+                "endAt": "2026-11-03T17:00:00Z",
+                "visitStatus": "UPCOMING",
+                "completedAt": null,
+                "invoicedAmount": null,
+                "assignedUsers": { "nodes": [{ "name": { "full": "Ezra Pinkney" } }] }
+              }
+            ]
+          }
+        },
+        {
+          "id": "Z2lkOi8vSm9iYmVyL0pvYi85MDAwMzAz",
+          "jobNumber": 1003,
+          "title": "Drain cleaning - monthly",
+          "jobType": "RECURRING",
+          "jobStatus": "active",
+          "createdAt": "2026-09-01T15:00:00Z",
+          "client": { "id": "Z2lkOi8vSm9iYmVyL0NsaWVudC85MDAwMTAz" },
+          "property": { "id": "Z2lkOi8vSm9iYmVyL1Byb3BlcnR5LzkwMDAyMDM" },
+          "total": null,
+          "recurrence": {
+            "rule": "Every 4 week(s) on Saturday",
+            "startDate": "2026-10-03",
+            "endDate": null
+          },
+          "instructions": null,
+          "visits": {
+            "nodes": [
+              {
+                "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzkwMDA0MDY",
+                "title": null,
+                "startAt": "2026-10-03T14:00:00Z",
+                "endAt": null,
+                "visitStatus": "OVERDUE",
+                "completedAt": null,
+                "assignedUsers": { "nodes": [{ "name": { "full": "Ezra Pinkney" } }] }
+              },
+              {
+                "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzkwMDA0MDU",
+                "title": null,
+                "startAt": "2026-10-31T14:00:00Z",
+                "endAt": "2026-10-31T15:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2026-10-31T15:00:00Z",
+                "invoicedAmount": "95.00",
+                "assignedUsers": { "nodes": [{ "name": { "full": "Ezra Pinkney" } }] }
+              },
+              {
+                "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzkwMDA0MDc",
+                "title": null,
+                "startAt": "2026-11-28T15:00:00Z",
+                "endAt": "2026-11-28T16:00:00Z",
+                "visitStatus": "UPCOMING",
+                "completedAt": null,
+                "assignedUsers": { "nodes": [{ "name": { "full": "Ezra Pinkney" } }] }
+              }
+            ]
+          }
+        },
+        {
+          "id": "Z2lkOi8vSm9iYmVyL0pvYi85MDAwMzA0",
+          "jobNumber": 1004,
+          "title": "Water heater quote",
+          "jobType": "ONE_OFF",
+          "jobStatus": "unscheduled",
+          "createdAt": "2026-10-30T21:00:00Z",
+          "client": { "id": "Z2lkOi8vSm9iYmVyL0NsaWVudC85MDAwMTAx" },
+          "property": { "id": "Z2lkOi8vSm9iYmVyL1Byb3BlcnR5LzkwMDAyMDE" },
+          "total": "0.00",
+          "recurrence": null,
+          "instructions": null,
+          "visits": { "nodes": [] }
+        },
+        {
+          "id": "Z2lkOi8vSm9iYmVyL0pvYi85MDAwMzA1",
+          "jobNumber": 1005,
+          "title": "Sewer line camera",
+          "jobType": "ONE_OFF",
+          "jobStatus": "requires_invoicing",
+          "createdAt": "2026-10-22T13:00:00Z",
+          "client": { "id": "Z2lkOi8vSm9iYmVyL0NsaWVudC85MDAwMTAy" },
+          "property": { "id": "Z2lkOi8vSm9iYmVyL1Byb3BlcnR5LzkwMDAyMDI" },
+          "total": "350.00",
+          "recurrence": null,
+          "instructions": null,
+          "visits": { "nodes": [] }
+        },
+        {
+          "id": "Z2lkOi8vSm9iYmVyL0pvYi85MDAwMzA2",
+          "jobNumber": 1006,
+          "title": "Toilet reset",
+          "jobType": "ONE_OFF",
+          "jobStatus": "unscheduled",
+          "createdAt": "2026-10-25T17:45:00Z",
+          "client": { "id": "Z2lkOi8vSm9iYmVyL0NsaWVudC85MDAwMTAz" },
+          "property": { "id": "Z2lkOi8vSm9iYmVyL1Byb3BlcnR5LzkwMDAyMDM" },
+          "total": "140.00",
+          "recurrence": null,
+          "instructions": null,
+          "visits": {
+            "nodes": [
+              {
+                "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzkwMDA0MDk",
+                "title": null,
+                "startAt": null,
+                "endAt": null,
+                "visitStatus": "UNSCHEDULED",
+                "completedAt": null,
+                "assignedUsers": { "nodes": [{ "name": { "full": "Dana Whitfield" } }] }
+              }
+            ]
+          }
+        },
+        {
+          "id": "Z2lkOi8vSm9iYmVyL0pvYi85MDAwMzA3",
+          "jobNumber": 1007,
+          "title": "Gas line check",
+          "jobType": "ONE_OFF",
+          "jobStatus": "today",
+          "createdAt": "2026-10-28T15:30:00Z",
+          "client": { "id": "Z2lkOi8vSm9iYmVyL0NsaWVudC85MDAwMTAx" },
+          "property": { "id": "Z2lkOi8vSm9iYmVyL1Byb3BlcnR5LzkwMDAyMDE" },
+          "total": "210.00",
+          "recurrence": null,
+          "instructions": null,
+          "visits": {
+            "nodes": [
+              {
+                "id": "Z2lkOi8vSm9iYmVyL1Zpc2l0LzkwMDA0MDg",
+                "title": null,
+                "startAt": "2026-11-02T20:00:00Z",
+                "endAt": "2026-11-02T21:00:00Z",
+                "visitStatus": "TODAY",
+                "completedAt": null,
+                "invoicedAmount": null,
+                "assignedUsers": { "nodes": [{ "name": { "full": "Dana Whitfield" } }] }
+              }
+            ]
+          }
+        }
+      ],
+      "pageInfo": { "hasNextPage": false }
+    }
+  },
+  "extensions": { "exportedAt": "2026-11-02T06:00:00Z", "apiVersion": "2025-04-16" }
+}
