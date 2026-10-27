@@ -1,0 +1,94 @@
+{
+  "page": 2,
+  "page_size": 2,
+  "total_pages": 2,
+  "total_items": 3,
+  "jobs": [
+    {
+      "id": "job-pv-02",
+      "invoice_number": "7102",
+      "description": "water heater flush",
+      "customer": {
+        "id": "cus-pv-01",
+        "first_name": "Beatrix",
+        "last_name": "Quennell",
+        "email": "beatrix.q@example.org",
+        "mobile_number": "214-555-0187"
+      },
+      "address": {
+        "id": "adr-pv-01",
+        "street": "5823 BELMONT AVENUE",
+        "street_line_2": null,
+        "city": "dallas",
+        "state": "TX",
+        "zip": "75206"
+      },
+      "work_status": "scheduled",
+      "schedule": {
+        "scheduled_start": "2026-11-02T08:00:00",
+        "scheduled_end": "2026-11-02T12:00:00",
+        "arrival_window": 60
+      },
+      "work_timestamps": {
+        "on_my_way_at": null,
+        "started_at": null,
+        "completed_at": null
+      },
+      "total_amount": 18500,
+      "outstanding_balance": 18500,
+      "assigned_employees": [
+        {
+          "first_name": "Ambrose",
+          "last_name": "Teague"
+        }
+      ],
+      "tags": [],
+      "original_estimate_id": null,
+      "notes": "Gate code 4417, ask for Beatrix Quennell, 214-555-0187",
+      "created_at": "2025-12-15T15:00:00Z"
+    },
+    {
+      "id": "job-pv-03",
+      "invoice_number": "7103",
+      "description": "replace water heater 40 gal",
+      "customer": {
+        "id": "cus-pv-02",
+        "first_name": "Fennimore",
+        "last_name": "Strand",
+        "email": "fennimore.s@example.com",
+        "mobile_number": "972-555-0192"
+      },
+      "address": {
+        "id": "adr-pv-02",
+        "street": "4541 Live Oak St",
+        "street_line_2": null,
+        "city": "Dallas",
+        "state": "TX",
+        "zip": "75204"
+      },
+      "work_status": "scheduled",
+      "schedule": {
+        "scheduled_start": "2026-11-06T10:00:00",
+        "scheduled_end": "2026-11-06T13:00:00",
+        "arrival_window": 60
+      },
+      "work_timestamps": {
+        "on_my_way_at": null,
+        "started_at": null,
+        "completed_at": null
+      },
+      "total_amount": 195000,
+      "outstanding_balance": 195000,
+      "assigned_employees": [
+        {
+          "first_name": "Ambrose",
+          "last_name": "Teague"
+        }
+      ],
+      "tags": [],
+      "original_estimate_id": null,
+      "notes": null,
+      "created_at": "2025-12-15T15:00:00Z"
+    }
+  ]
+}

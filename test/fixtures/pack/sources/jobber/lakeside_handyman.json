@@ -1,0 +1,243 @@
+{
+  "data": {
+    "account": {
+      "id": "acct-lakeside-01",
+      "name": "Lakeside Handyman",
+      "phone": "469.555.0130",
+      "owner": {
+        "name": "Nolan Abernathy"
+      },
+      "industry": "HANDYMAN"
+    },
+    "clients": {
+      "nodes": [
+        {
+          "id": "client-lakeside-01",
+          "firstName": "Philippa",
+          "lastName": "Ostrowski",
+          "companyName": null,
+          "isCompany": false,
+          "emails": [],
+          "phones": [
+            {
+              "number": "214-555-0184",
+              "primary": true
+            }
+          ],
+          "createdAt": "2024-09-01T15:00:00Z",
+          "properties": {
+            "nodes": [
+              {
+                "id": "prop-lakeside-01",
+                "address": {
+                  "street1": "3450 Cole Ave",
+                  "street2": null,
+                  "city": "Dallas",
+                  "province": "TX",
+                  "postalCode": "75204",
+                  "country": "US"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "client-lakeside-02",
+          "firstName": "Daria",
+          "lastName": "Wexley",
+          "companyName": null,
+          "isCompany": false,
+          "emails": [
+            {
+              "address": "daria.w@example.com",
+              "primary": true
+            }
+          ],
+          "phones": [
+            {
+              "number": "469-555-0185",
+              "primary": true
+            }
+          ],
+          "createdAt": "2024-09-01T15:00:00Z",
+          "properties": {
+            "nodes": [
+              {
+                "id": "prop-lakeside-02",
+                "address": {
+                  "street1": "5823 Belmont Ave",
+                  "street2": "Apt B",
+                  "city": "Dallas",
+                  "province": "TX",
+                  "postalCode": "75206",
+                  "country": "US"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "client-lakeside-03",
+          "firstName": "Anselm",
+          "lastName": "Pryce",
+          "companyName": null,
+          "isCompany": false,
+          "emails": [],
+          "phones": [
+            {
+              "number": "972-555-0186",
+              "primary": true
+            }
+          ],
+          "createdAt": "2024-09-01T15:00:00Z",
+          "properties": {
+            "nodes": [
+              {
+                "id": "prop-lakeside-03",
+                "address": {
+                  "street1": "1311 Tupelo Ave",
+                  "street2": null,
+                  "city": "Dallas",
+                  "province": "TX",
+                  "postalCode": "75214",
+                  "country": "US"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "jobs": {
+      "nodes": [
+        {
+          "id": "job-lakeside-01",
+          "jobNumber": 201,
+          "title": "TV mount",
+          "jobType": "ONE_OFF",
+          "jobStatus": "archived",
+          "createdAt": "2024-09-01T15:00:00Z",
+          "client": {
+            "id": "client-lakeside-01"
+          },
+          "property": {
+            "id": "prop-lakeside-01"
+          },
+          "total": null,
+          "recurrence": null,
+          "instructions": null,
+          "visits": {
+            "nodes": [
+              {
+                "id": "visit-lakeside-01",
+                "title": null,
+                "startAt": "2026-08-20T15:00:00Z",
+                "endAt": "2026-08-20T17:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2026-08-20T17:00:00Z",
+                "invoicedAmount": "150.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Nolan Abernathy"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "job-lakeside-02",
+          "jobNumber": 202,
+          "title": "Shelf install",
+          "jobType": "ONE_OFF",
+          "jobStatus": "archived",
+          "createdAt": "2024-09-01T15:00:00Z",
+          "client": {
+            "id": "client-lakeside-02"
+          },
+          "property": {
+            "id": "prop-lakeside-02"
+          },
+          "total": null,
+          "recurrence": null,
+          "instructions": null,
+          "visits": {
+            "nodes": [
+              {
+                "id": "visit-lakeside-02",
+                "title": null,
+                "startAt": "2026-05-05T14:00:00Z",
+                "endAt": "2026-05-05T15:30:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2026-05-05T15:30:00Z",
+                "invoicedAmount": "95.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Nolan Abernathy"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "job-lakeside-03",
+          "jobNumber": 203,
+          "title": "Drywall patch",
+          "jobType": "ONE_OFF",
+          "jobStatus": "today",
+          "createdAt": "2024-09-01T15:00:00Z",
+          "client": {
+            "id": "client-lakeside-03"
+          },
+          "property": {
+            "id": "prop-lakeside-03"
+          },
+          "total": null,
+          "recurrence": null,
+          "instructions": null,
+          "visits": {
+            "nodes": [
+              {
+                "id": "visit-lakeside-03",
+                "title": null,
+                "startAt": "2026-11-02T15:00:00Z",
+                "endAt": "2026-11-02T17:00:00Z",
+                "visitStatus": "TODAY",
+                "completedAt": null,
+                "invoicedAmount": null,
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Nolan Abernathy"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  },
+  "extensions": {
+    "exportedAt": "2026-11-02T06:00:00Z",
+    "apiVersion": "2025-04-16"
+  }
+}

@@ -1,0 +1,131 @@
+{
+  "page": 1,
+  "page_size": 3,
+  "total_pages": 1,
+  "total_items": 3,
+  "estimates": [
+    {
+      "id": "est-pv-01",
+      "estimate_number": "8101",
+      "work_status": "complete rated",
+      "customer": {
+        "id": "cus-pv-01",
+        "first_name": "Beatrix",
+        "last_name": "Quennell",
+        "email": "beatrix.q@example.org",
+        "mobile_number": "214-555-0187"
+      },
+      "address": {
+        "id": "adr-pv-01",
+        "street": "5823 BELMONT AVENUE",
+        "street_line_2": null,
+        "city": "dallas",
+        "state": "TX",
+        "zip": "75206"
+      },
+      "schedule": {
+        "scheduled_start": "2026-02-03T10:00:00",
+        "scheduled_end": "2026-02-03T10:30:00",
+        "arrival_window": 0
+      },
+      "options": [
+        {
+          "id": "opt-pv-01",
+          "name": "Option 1",
+          "total_amount": 210000,
+          "approval_status": "approved"
+        }
+      ],
+      "description": "water heater replacement - estimate",
+      "created_at": "2025-12-20T15:00:00Z",
+      "assigned_employees": [
+        {
+          "first_name": "Ambrose",
+          "last_name": "Teague"
+        }
+      ]
+    },
+    {
+      "id": "est-pv-02",
+      "estimate_number": "8102",
+      "work_status": "scheduled",
+      "customer": {
+        "id": "cus-pv-03",
+        "first_name": "Sabine",
+        "last_name": "Ollerenshaw",
+        "email": null,
+        "mobile_number": "(214) 555-0193"
+      },
+      "address": {
+        "id": "adr-pv-03",
+        "street": "4533 Live Oak St",
+        "street_line_2": "Apt. 4",
+        "city": null,
+        "state": "TX",
+        "zip": "75204"
+      },
+      "schedule": {
+        "scheduled_start": "2026-11-10T09:00:00",
+        "scheduled_end": "2026-11-10T10:00:00",
+        "arrival_window": 0
+      },
+      "options": [
+        {
+          "id": "opt-pv-02",
+          "name": "Option 1",
+          "total_amount": 640000,
+          "approval_status": null
+        }
+      ],
+      "description": "repipe - estimate",
+      "created_at": "2025-12-20T15:00:00Z",
+      "assigned_employees": [
+        {
+          "first_name": "Ambrose",
+          "last_name": "Teague"
+        }
+      ]
+    },
+    {
+      "id": "est-pv-03",
+      "estimate_number": "8103",
+      "work_status": "complete rated",
+      "customer": {
+        "id": "cus-pv-03",
+        "first_name": "Sabine",
+        "last_name": "Ollerenshaw",
+        "email": null,
+        "mobile_number": "(214) 555-0193"
+      },
+      "address": {
+        "id": "adr-pv-03",
+        "street": "4533 Live Oak St",
+        "street_line_2": "Apt. 4",
+        "city": null,
+        "state": "TX",
+        "zip": "75204"
+      },
+      "schedule": {
+        "scheduled_start": "2026-05-12T10:00:00",
+        "scheduled_end": "2026-05-12T10:30:00",
+        "arrival_window": 0
+      },
+      "options": [
+        {
+          "id": "opt-pv-03",
+          "name": "Option 1",
+          "total_amount": 0,
+          "approval_status": null
+        }
+      ],
+      "description": "leak under sink - estimate",
+      "created_at": "2025-12-20T15:00:00Z",
+      "assigned_employees": [
+        {
+          "first_name": "Ambrose",
+          "last_name": "Teague"
+        }
+      ]
+    }
+  ]
+}
