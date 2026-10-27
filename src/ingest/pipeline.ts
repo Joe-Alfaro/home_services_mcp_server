@@ -98,6 +98,9 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
       await writeStreetSegments(client, segments)
       await writeCanonical(client, runId, model)
       await client.query('COMMIT')
+      // Fresh statistics, so the tools' first queries after a reload get sane plans (an
+      // anti-join over unanalyzed jobs ran ~150x slower).
+      await client.query('ANALYZE')
       return {
         runId,
         summary,
