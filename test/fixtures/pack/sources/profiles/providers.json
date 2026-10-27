@@ -1,0 +1,105 @@
+{
+  "exported_at": "2026-11-02",
+  "providers": [
+    {
+      "profile_id": "pf_101",
+      "business_name": "Pecan Valley Plumbing Co.",
+      "owner_name": "Ambrose Teague",
+      "phone": "214 555 0110",
+      "email": "ambrose@pecanvalleyplumbing.example.com",
+      "trades": ["plumbing"],
+      "does_not_do": [],
+      "service_zips": ["75204", "75206"],
+      "hours": "Mon-Fri 8am-5pm",
+      "crew_size": 1,
+      "crm": "Housecall Pro"
+    },
+    {
+      "profile_id": "pf_102",
+      "business_name": "Pecan Valley Pest Control",
+      "owner_name": "Harlan Voss",
+      "phone": "(214) 555-0120",
+      "email": "harlan@pecanvalleypest.example.com",
+      "trades": ["pest"],
+      "does_not_do": [],
+      "service_zips": ["75204", "75206"],
+      "hours": "Mon-Sat 8am-6pm",
+      "crew_size": 1,
+      "crm": "Jobber"
+    },
+    {
+      "profile_id": "pf_103",
+      "business_name": "Lakeside Handyman",
+      "owner_name": "Nolan Abernathy",
+      "phone": "+1 (469) 555-0130",
+      "email": "nolan@lakesidehandyman.example.com",
+      "trades": ["handyman"],
+      "does_not_do": ["plumbing"],
+      "service_zips": ["75204", "75206", "75214"],
+      "hours": "M-F 8-5",
+      "crew_size": 1,
+      "crm": "jobber"
+    },
+    {
+      "profile_id": "pf_104",
+      "business_name": "Mockingbird Drain & Plumbing",
+      "owner_name": "Celestine Ruiz",
+      "phone": "214.555.0140",
+      "email": "celestine@mockingbirddrain.example.com",
+      "trades": ["plumbing"],
+      "does_not_do": [],
+      "service_zips": ["75206", "75214"],
+      "hours": {
+        "mon": "08:00-17:00",
+        "tue": "08:00-17:00",
+        "wed": "08:00-17:00",
+        "thu": "08:00-17:00",
+        "fri": "08:00-17:00",
+        "sat": "closed",
+        "sun": "closed"
+      },
+      "crew_size": 1,
+      "crm": "Jobber"
+    },
+    {
+      "profile_id": "pf_105",
+      "business_name": "Sumac Creek Rooter",
+      "owner_name": "Wilhelmina Strout",
+      "phone": "9725550150",
+      "email": "wil@sumaccreekrooter.example.com",
+      "trades": ["plumbing"],
+      "does_not_do": [],
+      "service_zips": ["75204"],
+      "hours": "Weekdays 07:00-18:00 / Saturday 08:00-14:00",
+      "crew_size": 1,
+      "crm": "HCP"
+    },
+    {
+      "profile_id": "pf_106",
+      "business_name": "Bishop Arts Handyman",
+      "owner_name": "Quincy Lorne",
+      "phone": "469-555-0160",
+      "email": "quincy@bishopartshandyman.example.com",
+      "trades": ["handyman"],
+      "does_not_do": [],
+      "service_zips": ["75204", "75214"],
+      "hours": "Mon-Fri 8am-5pm",
+      "crew_size": 1,
+      "crm": "Workiz"
+    },
+    {
+      "profile_id": "pf_107",
+      "business_name": "Larkspur Handyman",
+      "owner_name": "Rosalind Pratt",
+      "phone": "214-555-0170",
+      "email": "rosalind@larkspurhandyman.example.com",
+      "trades": ["handyman"],
+      "does_not_do": [],
+      "service_zips": ["75204", "75206", "75214"],
+      "hours": "M-F 8-5",
+      "crew_size": 1,
+      "crm": "Google Sheets",
+      "website": "larkspurhandyman.example.com"
+    }
+  ]
+}

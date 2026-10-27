@@ -1,0 +1,174 @@
+{
+  "data": {
+    "account": {
+      "id": "acct-bluestem-01",
+      "name": "Bluestem Fix-It",
+      "phone": "(469) 555-0130",
+      "owner": {
+        "name": "Nolan Abernathy"
+      },
+      "industry": "HANDYMAN"
+    },
+    "clients": {
+      "nodes": [
+        {
+          "id": "client-bluestem-01",
+          "firstName": "Marisela",
+          "lastName": "Dunworth",
+          "companyName": null,
+          "isCompany": false,
+          "emails": [],
+          "phones": [
+            {
+              "number": "214-555-0182",
+              "primary": true
+            }
+          ],
+          "createdAt": "2024-09-01T15:00:00Z",
+          "properties": {
+            "nodes": [
+              {
+                "id": "prop-bluestem-01",
+                "address": {
+                  "street1": "4612 Live Oak St",
+                  "street2": null,
+                  "city": "Dallas",
+                  "province": "TX",
+                  "postalCode": "75204",
+                  "country": "US"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "client-bluestem-02",
+          "firstName": "Tobias",
+          "lastName": "Fenwright",
+          "companyName": null,
+          "isCompany": false,
+          "emails": [
+            {
+              "address": "tobias.f@example.net",
+              "primary": true
+            }
+          ],
+          "phones": [
+            {
+              "number": "972-555-0183",
+              "primary": true
+            }
+          ],
+          "createdAt": "2024-09-01T15:00:00Z",
+          "properties": {
+            "nodes": [
+              {
+                "id": "prop-bluestem-02",
+                "address": {
+                  "street1": "1207 Tupelo Ave",
+                  "street2": null,
+                  "city": "Dallas",
+                  "province": "TX",
+                  "postalCode": "75214",
+                  "country": "US"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "jobs": {
+      "nodes": [
+        {
+          "id": "job-bluestem-01",
+          "jobNumber": 101,
+          "title": "Door repair",
+          "jobType": "ONE_OFF",
+          "jobStatus": "archived",
+          "createdAt": "2024-09-01T15:00:00Z",
+          "client": {
+            "id": "client-bluestem-01"
+          },
+          "property": {
+            "id": "prop-bluestem-01"
+          },
+          "total": null,
+          "recurrence": null,
+          "instructions": null,
+          "visits": {
+            "nodes": [
+              {
+                "id": "visit-bluestem-01",
+                "title": null,
+                "startAt": "2024-10-15T14:00:00Z",
+                "endAt": "2024-10-15T16:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2024-10-15T16:00:00Z",
+                "invoicedAmount": "180.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Nolan Abernathy"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "job-bluestem-02",
+          "jobNumber": 102,
+          "title": "Ceiling fan install",
+          "jobType": "ONE_OFF",
+          "jobStatus": "archived",
+          "createdAt": "2024-09-01T15:00:00Z",
+          "client": {
+            "id": "client-bluestem-02"
+          },
+          "property": {
+            "id": "prop-bluestem-02"
+          },
+          "total": null,
+          "recurrence": null,
+          "instructions": null,
+          "visits": {
+            "nodes": [
+              {
+                "id": "visit-bluestem-02",
+                "title": null,
+                "startAt": "2025-10-07T15:00:00Z",
+                "endAt": "2025-10-07T17:00:00Z",
+                "visitStatus": "COMPLETED",
+                "completedAt": "2025-10-07T17:00:00Z",
+                "invoicedAmount": "220.00",
+                "assignedUsers": {
+                  "nodes": [
+                    {
+                      "name": {
+                        "full": "Nolan Abernathy"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  },
+  "extensions": {
+    "exportedAt": "2026-11-02T06:00:00Z",
+    "apiVersion": "2025-04-16"
+  }
+}
