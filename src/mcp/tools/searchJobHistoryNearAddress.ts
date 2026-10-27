@@ -6,7 +6,7 @@ import type { ServerOptions } from '../context.ts'
 import { loadJobs, type Job } from '../db.ts'
 import { ToolInputError } from '../errors.ts'
 import { presentJob } from '../present.ts'
-import { mergeSources, type Source } from '../privacy.ts'
+import { mergeSources } from '../privacy.ts'
 import { respond } from '../result.ts'
 import { intField, localDateField, textField } from '../schemas.ts'
 import { lastMonthsWindow, presentWindow, windowInstants, type LocalWindow } from '../time.ts'
@@ -80,19 +80,6 @@ function chooseWindow(input: Input, today: string): LocalWindow {
     throw new ToolInputError('since', `must be before until (${to}); dates are YYYY-MM-DD`)
   }
   return { from, to }
-}
-
-/**
- * The CRM job a visit belongs to, cited next to its visits: Q1 counts jobs, so the job's own
- * record id (e.g. a Jobber Job, not only its Visits) should be in the answer (R19).
- */
-function parentCitation(job: Job): Source[] {
-  if (job.serviceKey === job.id) return []
-  const [sourceSystem, , ...rest] = job.serviceKey.split(':')
-  const sourceRecordId = rest.join(':')
-  const sourceFile = job.sources.find((source) => source.sourceSystem === sourceSystem)?.sourceFile
-  if (sourceSystem === undefined || sourceFile === undefined || sourceRecordId === '') return []
-  return [{ sourceSystem, sourceFile, sourceRecordId }]
 }
 
 /** When a service was done: its end, else its completion, else its start. */
@@ -172,7 +159,8 @@ export async function searchJobHistoryNearAddress(input: Input, options: ServerO
         ...(entries.length > 1 ? { visits: entries.length } : {}),
         distanceMiles: Math.round((last.meters / METERS_PER_MILE) * 100) / 100,
         sources: mergeSources(
-          parentCitation(last.job),
+          // Q1 counts jobs, so a visit group also cites its parent CRM job's own record (R19).
+          last.job.parentSources,
           ...entries.map((entry) => entry.job.sources),
         ),
       },

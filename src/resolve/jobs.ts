@@ -70,6 +70,11 @@ export interface JobResolutionInput {
   calendarBlocks: readonly CalendarBlockCandidate[]
   providerIdByKey: ReadonlyMap<ProviderKey, string>
   propertyIdByKey: ReadonlyMap<PropertyKey, string>
+  /**
+   * G18, D-122: whether two different property ids are one home for mirroring (for example, one
+   * side has no zip). Default: only equal ids are.
+   */
+  sameHome?: (blockPropertyId: string, jobPropertyId: string) => boolean
 }
 
 export interface JobResolution {
@@ -259,7 +264,7 @@ function isMirrorable(block: CalendarBlockCandidate): boolean {
  * (no property needed). A date-only row takes the time of the provider's single work block that
  * local day. The block stays a calendar block; it is linked to the job and listed as mirrored.
  * G18, D-085: when the block's property and the job's are both known and differ, they are two
- * bookings, never a mirror.
+ * bookings, never a mirror; D-122: a missing zip on one side is not a difference (sameHome).
  */
 function mirrorCalendarBlocks(
   groups: Group[],
@@ -282,7 +287,10 @@ function mirrorCalendarBlocks(
   const sameProperty = (group: Group, block: CalendarBlockCandidate) => {
     const blockProperty = propertyOf(block)
     if (group.propertyId === null || blockProperty === null) return null
-    return group.propertyId === blockProperty
+    return (
+      group.propertyId === blockProperty ||
+      (input.sameHome?.(blockProperty, group.propertyId) ?? false)
+    )
   }
 
   function link(group: Group, block: CalendarBlockCandidate, evidence: Record<string, unknown>) {

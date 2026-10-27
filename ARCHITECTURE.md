@@ -367,11 +367,13 @@ homeowner_contacts property_id, source_record_id, name, phones text[], emails te
 jobs               id, provider_id, property_id NULL, parent_job_id NULL → jobs, kind,
                    status, status_raw, trade, service, start_at, end_at, all_day,
                    time_basis, completed_at, amount_cents bigint, is_recurring,
-                   description_redacted, duplicate_count
+                   description_redacted, rescheduled_from date NULL (G9), duplicate_count
 job_links          job_id, source_record_id, method, confidence, evidence
 
-declared_hours     provider_id, weekday smallint, start_local time, end_local time, source_record_id, parsed
-calendar_blocks    id, provider_id, start_at, end_at, all_day, busy, category, recurrence_uid, source_record_id
+declared_hours     provider_id, weekday smallint, start_local time, end_local time, source_record_id, parsed,
+                   always_open bool (G20: a 24/7 claim)
+calendar_blocks    id, provider_id, start_at, end_at, all_day, busy, category, recurrence_uid,
+                   status ('confirmed'|'tentative'|'cancelled', G17), source_record_id
 
 match_decisions    entity ('provider'|'property'|'job'), left_ref, right_ref, method, score, decision, evidence
 ```
@@ -394,6 +396,13 @@ The MCP server connects as that role (R16, R17).
 - **Jobs:** CSV rows identical after normalization (date, time, address key, job text, amount) →
   one job with `duplicate_count`, confidence 0.95. Same provider + property + start within 30 min
   across sources → merged at 0.8. CRM A visits stay separate rows linked by `parent_job_id`.
+  A calendar event mirrors a job of the same provider starting within 30 min unless both addresses
+  are known and differ; the same house number, street and unit with a zip on one side only is the
+  same address (G18).
+- **Account records:** every job record also links to its provider (`account_record`) with
+  confidence = the account's own link confidence × `ACCOUNT_RECORD_CONFIDENCE` (1: a record belongs
+  to its account by construction); evidence `{ providerKey, accountMethod, accountConfidence }`
+  (R8 c).
 
 ## Availability engine (R13)
 
