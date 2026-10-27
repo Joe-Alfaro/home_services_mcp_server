@@ -1,0 +1,117 @@
+{
+  "question": "Which plumber near 75206 is the best fit for a water heater replacement this week, and why?",
+  "tool": "rank_providers_for_job",
+  "derivation": "Derived from the raw data pack by a separate pass that never read the implementation. Candidates = the 6 profiles with trade plumbing (CRM accounts merged on phone; Lone Star's Housecall Pro and Workiz accounts are one provider). 'Near 75206' = the provider declares 75206 (5 of 6; Rapid Rooter TX does not and has 1 job there). Water-heater replacement = 6 phrase families (new water heater, WH replace, replace water heater, water heater install, water heater replacement, tankless conversion); repair, flush, pilot and no-hot-water jobs are counted separately. Counts are completed jobs over the last 24 months. 'This week' = [2026-11-02, 2026-11-09) America/Chicago; a replacement needs about 4.5 h (median 4.25-5 h). Openings use the crew-aware model (D-041). The spec says Q6 has no single right answer: correct = a complete, explained, sourced ranking (R21), so the eval checks defensible constraints rather than one order.",
+  "tolerance": "The ranking must be an ordered list (scores non-increasing; rank fields, if present, 1..n) in which every entry has a numeric score, a non-empty list of factors, sources on every factor, and an availability confidence. Every candidate with mustInclude=true must appear exactly once; Rapid Rooter TX may appear but not first. Constraints: Lone Star Plumbing in the top 2, Greenville Ave Plumbing in the top 3, Dallas Drain Pros / Tejas Rooter / Rapid Rooter TX not first, Dallas Drain Pros marked as having no water-heater history (G21). mustNotAppear names fail if listed as candidates.",
+  "window": { "from": "2026-11-02T00:00:00-06:00", "to": "2026-11-09T00:00:00-06:00" },
+  "jobMinutes": 270,
+  "candidates": [
+    {
+      "name": "Lone Star Plumbing",
+      "aliases": ["Lone Star Plumbing Co.", "Lone Star Plumbing Co LLC"],
+      "profileId": "hp_009",
+      "mustInclude": true,
+      "maxRank": 2,
+      "declares75206": true,
+      "completed": 262,
+      "completedIn75206": 148,
+      "whReplacements": 111,
+      "whReplacementsIn75206": 54,
+      "lastWhReplacement": "2026-10-29",
+      "crew": 4,
+      "openingCapacityModel": "Mon 07:00-13:30, Tue 07:00-18:00 and 2 more",
+      "evidence": ["workiz:FDYR6V8B:5W7KO0", "workiz:FDYR6V8B:64J3BF"]
+    },
+    {
+      "name": "Greenville Ave Plumbing",
+      "aliases": [],
+      "profileId": "hp_010",
+      "mustInclude": true,
+      "maxRank": 3,
+      "declares75206": true,
+      "completed": 185,
+      "completedIn75206": 124,
+      "whReplacements": 52,
+      "whReplacementsIn75206": 32,
+      "lastWhReplacement": "2026-10-23",
+      "crew": 2,
+      "openingCapacityModel": "Thu 11-05 08:00-17:00",
+      "evidence": [
+        "jobber:Z2lkOi8vSm9iYmVyL0pvYi83MTA5MjI0/visit:Z2lkOi8vSm9iYmVyL1Zpc2l0LzcxMDkyMjQ"
+      ]
+    },
+    {
+      "name": "Abrams Plumbing",
+      "aliases": [],
+      "profileId": "hp_013",
+      "mustInclude": true,
+      "declares75206": true,
+      "completed": 120,
+      "completedIn75206": 21,
+      "whReplacements": 27,
+      "whReplacementsIn75206": 5,
+      "lastWhReplacement": "2026-10-20",
+      "crew": 1,
+      "openingCapacityModel": "Tue 11-03 09:30-17:00 (the only >= 4.5 h single-lane opening of any plumber); out of office Wed 11-04 to Sun 11-08",
+      "evidence": ["hcp:job_6cf71509d91e1c11f82a07656789512e"]
+    },
+    {
+      "name": "Tejas Rooter & Plumbing",
+      "aliases": [],
+      "profileId": "hp_012",
+      "mustInclude": true,
+      "notFirst": true,
+      "declares75206": true,
+      "completed": 178,
+      "completedIn75206": 21,
+      "whReplacements": 14,
+      "whReplacementsIn75206": 4,
+      "lastWhReplacement": "2026-10-12",
+      "crew": 2,
+      "openingCapacityModel": "none >= 4.25 h this week",
+      "evidence": ["workiz:9AH1V0Y5:IRCT7S"]
+    },
+    {
+      "name": "Dallas Drain Pros",
+      "aliases": [],
+      "profileId": "hp_011",
+      "mustInclude": true,
+      "notFirst": true,
+      "mustSayNoWaterHeaterHistory": true,
+      "declares75206": true,
+      "completed": 229,
+      "completedIn75206": 26,
+      "whReplacements": 0,
+      "whReplacementsIn75206": 0,
+      "lastWhReplacement": null,
+      "crew": 3,
+      "openingCapacityModel": "Mon 07:00-15:30 and 6 more",
+      "evidence": []
+    },
+    {
+      "name": "Rapid Rooter TX",
+      "aliases": [],
+      "profileId": "hp_014",
+      "mustInclude": false,
+      "notFirst": true,
+      "declares75206": false,
+      "completed": 290,
+      "completedIn75206": 1,
+      "whReplacements": 111,
+      "whReplacementsIn75206": 1,
+      "lastWhReplacement": "2026-10-30",
+      "crew": 5,
+      "openingCapacityModel": "Mon 07:00-13:30, Tue 08:30-16:15 and 4 more",
+      "evidence": [
+        "jobber:Z2lkOi8vSm9iYmVyL0pvYi83MTExNTA4/visit:Z2lkOi8vSm9iYmVyL1Zpc2l0LzcxMTE1MDg"
+      ]
+    }
+  ],
+  "mustNotAppear": [
+    {
+      "name": "M Streets Handyman",
+      "reason": "not a plumber; profile says it does not do plumbing"
+    },
+    { "name": "Lone Star Termite & Pest", "reason": "pest business with a similar name" }
+  ]
+}

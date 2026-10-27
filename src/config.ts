@@ -11,9 +11,21 @@ export const TIME_ZONE = 'America/Chicago'
 const DEFAULT_DB_PORT = 5434
 const DEFAULT_TODAY = '2026-11-02'
 const DEFAULT_DATA_PACK_DIR = '_private/data_pack'
+const READER_ROLE = 'hsmcp_reader'
+// Local-only, set by migrations/0005_mcp_views.sql (like the compose superuser's password).
+const DEFAULT_READER_PASSWORD = 'hsmcp_reader'
+
+function readerUrlFor(databaseUrl: string, password: string): string {
+  const url = new URL(databaseUrl)
+  url.username = READER_ROLE
+  url.password = password
+  return url.toString()
+}
 
 export interface Config {
   databaseUrl: string
+  /** The MCP server's connection: same database, as the SELECT-only `hsmcp_reader` role (R16). */
+  readerDatabaseUrl: string
   dataPackDir: string
   /** The service's notion of "today" (YYYY-MM-DD in TIME_ZONE). Never the system clock. */
   today: string
@@ -24,6 +36,8 @@ export interface Config {
 
 const envSchema = z.object({
   DATABASE_URL: z.string().min(1).optional(),
+  READER_DATABASE_URL: z.string().min(1).optional(),
+  HSMCP_READER_PASSWORD: z.string().min(1).default(DEFAULT_READER_PASSWORD),
   HSMCP_DB_PORT: z
     .string()
     .regex(/^\d+$/, 'must be a port number')
@@ -60,10 +74,12 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     .toUTC()
     .toISO()
   if (now === null) throw new Error('Invalid configuration: HS_NOW could not be resolved')
+  const databaseUrl =
+    values.DATABASE_URL ?? `postgres://hsmcp:hsmcp@localhost:${String(values.HSMCP_DB_PORT)}/hsmcp`
   return {
-    databaseUrl:
-      values.DATABASE_URL ??
-      `postgres://hsmcp:hsmcp@localhost:${String(values.HSMCP_DB_PORT)}/hsmcp`,
+    databaseUrl,
+    readerDatabaseUrl:
+      values.READER_DATABASE_URL ?? readerUrlFor(databaseUrl, values.HSMCP_READER_PASSWORD),
     dataPackDir: path.resolve(REPO_ROOT, values.DATA_PACK_DIR),
     today: values.HS_TODAY,
     now,

@@ -17,7 +17,8 @@
     "setup": "npm run db:up && npm run ingest",
     "mcp": "tsx src/cli/mcp.ts",
     "prepare": "husky",
-    "start": "tsx src/cli/mcp.ts"
+    "start": "tsx src/cli/mcp.ts",
+    "eval": "tsx eval/run.ts"
   },
   "license": "UNLICENSED",
   "type": "module",

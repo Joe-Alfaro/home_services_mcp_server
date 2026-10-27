@@ -1,0 +1,265 @@
+import type pg from 'pg'
+import { createStreetIndex, type StreetIndex, type StreetSegment } from '../normalize/geocode.ts'
+import { readSources, type ProviderRef, type Source } from './privacy.ts'
+
+/*
+ * Reads for the tools. Everything comes from the v_* views the hsmcp_reader role may SELECT
+ * (R16); no statement here writes.
+ */
+
+export interface Provider {
+  id: string
+  name: string
+  aliases: string[]
+  trades: string[]
+  doesNotDo: string[]
+  declaredZips: string[] | null
+  observedZips: string[]
+  crewSize: number | null
+  declaredCrm: string | null
+  hoursParsed: string | null
+  confidence: number
+  sourceSystems: string[]
+  sources: Source[]
+}
+
+interface ProviderRow {
+  id: string
+  display_name: string
+  aliases: string[]
+  trades: string[]
+  does_not_do: string[]
+  declared_service_zips: string[] | null
+  observed_service_zips: string[]
+  crew_size: number | null
+  declared_crm: string | null
+  hours_parsed: string | null
+  confidence: string
+  source_systems: string[]
+  sources: unknown
+}
+
+function toProvider(row: ProviderRow): Provider {
+  return {
+    id: row.id,
+    name: row.display_name,
+    aliases: row.aliases,
+    trades: row.trades,
+    doesNotDo: row.does_not_do,
+    declaredZips: row.declared_service_zips === null ? null : [...row.declared_service_zips].sort(),
+    observedZips: [...row.observed_service_zips].sort(),
+    crewSize: row.crew_size,
+    declaredCrm: row.declared_crm,
+    hoursParsed: row.hours_parsed,
+    confidence: Number(row.confidence),
+    sourceSystems: row.source_systems,
+    sources: readSources(row.sources),
+  }
+}
+
+const PROVIDER_COLUMNS = `id, display_name, aliases, trades, does_not_do, declared_service_zips,
+  observed_service_zips, crew_size, declared_crm, hours_parsed, confidence, source_systems, sources`
+
+export async function loadProviders(pool: pg.Pool): Promise<Provider[]> {
+  const { rows } = await pool.query<ProviderRow>(
+    `SELECT ${PROVIDER_COLUMNS} FROM v_providers ORDER BY display_name, id`,
+  )
+  return rows.map(toProvider)
+}
+
+export async function loadProvidersByTrade(pool: pg.Pool, trade: string): Promise<Provider[]> {
+  const { rows } = await pool.query<ProviderRow>(
+    `SELECT ${PROVIDER_COLUMNS} FROM v_providers WHERE $1 = ANY (trades) ORDER BY display_name, id`,
+    [trade],
+  )
+  return rows.map(toProvider)
+}
+
+export async function loadProvider(pool: pg.Pool, id: string): Promise<Provider | undefined> {
+  const { rows } = await pool.query<ProviderRow>(
+    `SELECT ${PROVIDER_COLUMNS} FROM v_providers WHERE id = $1`,
+    [id],
+  )
+  const [row] = rows
+  return row === undefined ? undefined : toProvider(row)
+}
+
+export function providerRef(provider: { id: string; name: string }): ProviderRef {
+  return { providerId: provider.id, name: provider.name }
+}
+
+/** A canonical job, visit or estimate with its property projected to block + zip (R17). */
+export interface Job {
+  id: string
+  providerId: string
+  providerName: string
+  /** Visits of one CRM A job share it; otherwise the job's own id (Q1 counts services). */
+  serviceKey: string
+  kind: 'job' | 'visit' | 'estimate'
+  status: string
+  trade: string | null
+  service: string | null
+  startAt: Date | null
+  endAt: Date | null
+  completedAt: Date | null
+  allDay: boolean
+  description: string | null
+  duplicateCount: number
+  confidence: number
+  blockNumber: number | null
+  blockLabel: string | null
+  streetName: string | null
+  streetType: string | null
+  zip: string | null
+  lat: number | null
+  lon: number | null
+  sourceSystems: string[]
+  sources: Source[]
+}
+
+interface JobRow {
+  id: string
+  provider_id: string
+  provider_name: string
+  parent_key: string | null
+  kind: Job['kind']
+  status: string
+  trade: string | null
+  service: string | null
+  start_at: Date | null
+  end_at: Date | null
+  completed_at: Date | null
+  all_day: boolean
+  description: string | null
+  duplicate_count: number
+  confidence: string
+  block_number: number | null
+  block_label: string | null
+  street_name: string | null
+  street_type: string | null
+  zip: string | null
+  lat: number | null
+  lon: number | null
+  source_systems: string[]
+  sources: unknown
+}
+
+function toJob(row: JobRow): Job {
+  return {
+    id: row.id,
+    providerId: row.provider_id,
+    providerName: row.provider_name,
+    serviceKey: row.parent_key ?? row.id,
+    kind: row.kind,
+    status: row.status,
+    trade: row.trade,
+    service: row.service,
+    startAt: row.start_at,
+    endAt: row.end_at,
+    completedAt: row.completed_at,
+    allDay: row.all_day,
+    description: row.description,
+    duplicateCount: row.duplicate_count,
+    confidence: Number(row.confidence),
+    blockNumber: row.block_number,
+    blockLabel: row.block_label,
+    streetName: row.street_name,
+    streetType: row.street_type,
+    zip: row.zip,
+    lat: row.lat,
+    lon: row.lon,
+    sourceSystems: row.source_systems,
+    sources: readSources(row.sources),
+  }
+}
+
+/**
+ * Jobs matching a WHERE clause over v_jobs (aliased `j`). Callers pass only fixed SQL plus
+ * positional parameters.
+ */
+export async function loadJobs(
+  pool: pg.Pool,
+  where: string,
+  params: readonly unknown[],
+): Promise<Job[]> {
+  const { rows } = await pool.query<JobRow>(
+    `SELECT j.id, j.provider_id, j.provider_name, p.parent_key, j.kind, j.status, j.trade,
+            j.service, j.start_at, j.end_at, j.completed_at, j.all_day, j.description,
+            j.duplicate_count, j.confidence, j.block_number, j.block_label, j.street_name,
+            j.street_type, j.zip, j.lat, j.lon, j.source_systems, j.sources
+       FROM v_jobs j
+       LEFT JOIN v_job_parents p ON p.job_id = j.id
+      WHERE ${where}
+      ORDER BY j.start_at NULLS LAST, j.id`,
+    [...params],
+  )
+  return rows.map(toJob)
+}
+
+export interface Conflict {
+  providerId: string
+  kind: string
+  detail: Record<string, unknown>
+  sources: Source[]
+}
+
+export async function loadConflicts(pool: pg.Pool, providerIds: string[]): Promise<Conflict[]> {
+  const { rows } = await pool.query<{
+    provider_id: string
+    kind: string
+    detail: Record<string, unknown>
+    sources: unknown
+  }>(
+    `SELECT provider_id, kind, detail, sources FROM v_provider_conflicts
+      WHERE provider_id = ANY ($1) ORDER BY provider_id, kind, detail::text`,
+    [providerIds],
+  )
+  return rows.map((row) => ({
+    providerId: row.provider_id,
+    kind: row.kind,
+    detail: row.detail,
+    sources: readSources(row.sources),
+  }))
+}
+
+const streetIndexes = new WeakMap<pg.Pool, Promise<StreetIndex>>()
+
+/** The reference street map (v_street_segments), read once per pool. */
+export function loadStreetIndex(pool: pg.Pool): Promise<StreetIndex> {
+  const cached = streetIndexes.get(pool)
+  if (cached !== undefined) return cached
+  const loading = pool
+    .query<{
+      street_name: string
+      street_type: string
+      city: string
+      state: string
+      zip: string
+      from_number: number
+      to_number: number
+      start_lat: number
+      start_lon: number
+      end_lat: number
+      end_lon: number
+    }>('SELECT * FROM v_street_segments')
+    .then(({ rows }) =>
+      createStreetIndex(
+        rows.map((row): StreetSegment => ({
+          streetName: row.street_name,
+          streetType: row.street_type,
+          city: row.city,
+          state: row.state,
+          zip: row.zip,
+          fromNumber: row.from_number,
+          toNumber: row.to_number,
+          startLat: row.start_lat,
+          startLon: row.start_lon,
+          endLat: row.end_lat,
+          endLon: row.end_lon,
+        })),
+      ),
+    )
+  loading.catch(() => streetIndexes.delete(pool))
+  streetIndexes.set(pool, loading)
+  return loading
+}
