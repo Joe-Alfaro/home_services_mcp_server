@@ -61,6 +61,8 @@ export interface ServerModule {
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..')
 
 export const PACK_DIR = path.join(REPO_ROOT, 'test/fixtures/pack')
+/** A second, independent invented pack for facts the main pack's hand-computed answers avoid. */
+export const FACTS_PACK_DIR = path.join(REPO_ROOT, 'test/fixtures/facts_pack')
 export const TODAY = '2026-11-02'
 export const NOW = '2026-11-02T06:00:00Z'
 export const READER_ROLE = 'hsmcp_reader'
@@ -90,8 +92,9 @@ export function startPostgres(): Promise<StartedPostgreSqlContainer> {
 export function runPackPipeline(
   pipeline: PipelineModule,
   databaseUrl: string,
+  dataPackDir = PACK_DIR,
 ): Promise<PipelineResult> {
-  return pipeline.runPipeline({ dataPackDir: PACK_DIR, databaseUrl, today: TODAY, now: NOW })
+  return pipeline.runPipeline({ dataPackDir, databaseUrl, today: TODAY, now: NOW })
 }
 
 /**
@@ -108,8 +111,8 @@ export async function readerUrl(admin: pg.Client, adminUrl: string): Promise<str
 }
 
 /** Raw text of a fixture file, by its path relative to the pack (as cited in `sourceFile`). */
-export function readPackFile(sourceFile: string): string {
-  return readFileSync(path.join(PACK_DIR, ...sourceFile.split('/')), 'utf8')
+export function readPackFile(sourceFile: string, packDir = PACK_DIR): string {
+  return readFileSync(path.join(packDir, ...sourceFile.split('/')), 'utf8')
 }
 
 export interface Source {
