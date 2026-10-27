@@ -1,0 +1,103 @@
+{
+  "question": "Show me everything we know about Lone Star Plumbing: trades, service area, job history, and next 3 openings.",
+  "tool": "get_provider_profile",
+  "derivation": "Derived from the raw data pack by a separate pass that never read the implementation. The profile 'Lone Star Plumbing Co.', the Housecall Pro account 'Lone Star Plumbing Co LLC' and the Workiz account 'Lone Star Plumbing' share one business phone (three formats), the same four technicians, 38 homes and a mid-June 2025 handover with no overlapping jobs, so they are one provider. 'Lone Star Termite & Pest' (Jobber, pest, another phone) is a different business. Counts: Housecall Pro 392 unique jobs (393 rows; one page-boundary repeat dropped) plus 71 estimates, Workiz 104 jobs. Completed before 2026-11-02: 262 (HCP 168, Workiz 94); scheduled: 182 (all HCP); cancelled: 35 (HCP 29, Workiz 6); limbo or unscheduled: 17; estimates 71 are not jobs. Declared zips come from the profile; observed zips are completed jobs by property zip over 24 months. Openings use the crew-aware model (D-041): crew 4, max observed concurrency 4, so capacity 4; busy = the Housecall Pro scheduled jobs listed below (no calendar for this provider); declared hours Mon-Fri 07:00-18:00, Sat 08:00-14:00, Sun closed; from now = 2026-11-02 00:00.",
+  "tolerance": "The answer must resolve to one provider whose name matches (case/punctuation-insensitive, Co/LLC ignored) and whose top-level sources cover the profile, Housecall Pro and Workiz but no Jobber record (the Jobber account with the same prefix is the pest business). History counts within +/-1 (page-boundary repeat). Declared zips must equal the expected set; observed zips must include every expected observed zip (including 75041, outside the declared area). Exactly 3 openings, ascending, each with a confidence, starting at or after now, inside declared hours (never Sunday, never before 07:00), and never at a time when all 4 technicians are booked per the busy list. An opening that overlaps any booking relies on a free crew lane and must not be 'high' confidence (D-041). referenceOpenings are reported as notes only.",
+  "providerNames": ["Lone Star Plumbing", "Lone Star Plumbing Co.", "Lone Star Plumbing Co LLC"],
+  "mustNotBe": ["Lone Star Termite & Pest"],
+  "accounts": [
+    { "sourceSystem": "profiles", "account": "hp_009", "name": "Lone Star Plumbing Co." },
+    {
+      "sourceSystem": "housecall_pro",
+      "account": "com_da80a9718e9d66b5363b69906e2393df",
+      "name": "Lone Star Plumbing Co LLC",
+      "jobs": 392,
+      "estimates": 71,
+      "dated": "2025-06-17..2026-12-02"
+    },
+    {
+      "sourceSystem": "workiz",
+      "account": "FDYR6V8B",
+      "name": "Lone Star Plumbing",
+      "jobs": 104,
+      "dated": "2024-11-02..2025-06-12"
+    }
+  ],
+  "requiredSourceSystems": ["housecall", "workiz", "profile"],
+  "forbiddenSourceSystems": ["jobber"],
+  "trades": ["plumbing"],
+  "declaredZips": ["75204", "75206", "75214", "75219", "75223"],
+  "observedZips": { "75206": 148, "75204": 42, "75223": 27, "75214": 24, "75219": 20, "75041": 1 },
+  "history": {
+    "completed": 262,
+    "scheduled": 182,
+    "cancelled": 35,
+    "limboOrUnscheduled": 17,
+    "estimates": 71,
+    "tolerance": 1
+  },
+  "now": "2026-11-02T00:00:00-06:00",
+  "hours": {
+    "mon": ["07:00", "18:00"],
+    "tue": ["07:00", "18:00"],
+    "wed": ["07:00", "18:00"],
+    "thu": ["07:00", "18:00"],
+    "fri": ["07:00", "18:00"],
+    "sat": ["08:00", "14:00"],
+    "sun": null
+  },
+  "capacity": 4,
+  "openingsCount": 3,
+  "busy": {
+    "2026-11-02": [
+      ["07:00", "08:30"],
+      ["09:30", "12:30"],
+      ["10:00", "13:00"],
+      ["12:30", "17:30"],
+      ["13:00", "18:00"],
+      ["13:30", "14:30"],
+      ["13:30", "18:00"],
+      ["15:30", "18:00"]
+    ],
+    "2026-11-03": [
+      ["07:00", "08:30"],
+      ["07:00", "09:00"],
+      ["07:00", "10:30"],
+      ["09:00", "14:30"],
+      ["12:30", "14:00"],
+      ["14:00", "15:30"],
+      ["14:30", "17:30"],
+      ["15:30", "18:00"],
+      ["16:15", "17:45"]
+    ],
+    "2026-11-04": [
+      ["07:00", "08:30"],
+      ["07:00", "09:00"],
+      ["08:30", "10:00"],
+      ["09:30", "13:00"],
+      ["12:45", "14:45"],
+      ["15:30", "17:00"],
+      ["15:30", "17:30"]
+    ],
+    "2026-11-05": [
+      ["07:00", "13:00"],
+      ["08:30", "10:00"],
+      ["09:00", "11:30"],
+      ["09:00", "12:30"],
+      ["10:30", "15:30"],
+      ["12:30", "14:30"],
+      ["13:00", "14:30"],
+      ["14:00", "16:00"],
+      ["15:15", "16:15"],
+      ["16:30", "18:00"],
+      ["16:30", "18:00"],
+      ["17:00", "18:00"]
+    ]
+  },
+  "referenceOpenings": [
+    { "start": "2026-11-02T07:00:00-06:00", "end": "2026-11-02T13:30:00-06:00" },
+    { "start": "2026-11-02T14:30:00-06:00", "end": "2026-11-02T15:30:00-06:00" },
+    { "start": "2026-11-02T17:30:00-06:00", "end": "2026-11-02T18:00:00-06:00" }
+  ],
+  "notes": "Most of the 182 scheduled jobs (176) are outside the target zips; the profile's CRM field names only Housecall Pro (stale). Observed work types: water heater 162 (replacement 111), fixtures 46, leaks/pipes 29, drains 25."
+}
