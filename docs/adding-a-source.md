@@ -186,7 +186,7 @@ export const adapters: readonly SourceAdapter[] = [
     scaffold appends one system to whatever is already registered.
   - [`test/integration/ingest.test.ts`](../test/integration/ingest.test.ts), run by
     `npm run test:integration`: loads `test/fixtures/<folder>/` for each adapter's
-    `sources/<folder>/` pattern and expects records from every registered source, so name the
+    `sources/<folder>/` pattern and stores every candidate they produce, so name the
     fixture folder after the pattern folder (the scaffold does).
 
 ### 6. Put the real files in place

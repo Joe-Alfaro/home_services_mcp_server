@@ -6,7 +6,7 @@ import type { SourceFile, SourceSystem } from '../../src/adapters/types.ts'
 import { writeIngest } from '../../src/db/ingest.ts'
 import { migrate } from '../../src/db/migrate.ts'
 import { claimedBy } from '../../src/ingest/files.ts'
-import { runAdapters, summarize } from '../../src/ingest/run.ts'
+import { candidatesOf, runAdapters, summarize } from '../../src/ingest/run.ts'
 import { loadFixtureFiles, makeCtx } from '../unit/adapters/support.ts'
 
 // Each adapter claims sources/<folder>/... and its fixtures live in test/fixtures/<folder>/, so the
@@ -16,6 +16,7 @@ const FIXTURE_DIRS = [
     adapters.flatMap((adapter) => adapter.patterns.map((pattern) => pattern.split('/')[1])),
   ),
 ].filter((dir): dir is string => dir !== undefined)
+const ORIGINAL_SYSTEMS = ['jobber', 'housecall_pro', 'workiz', 'spreadsheet', 'ics', 'profiles']
 const ORIGINAL_DIRS = ['jobber', 'housecall_pro', 'workiz', 'spreadsheet', 'calendars', 'profiles']
 
 // The loader writes every candidate and issue with provenance, and a re-run replaces the last.
@@ -61,16 +62,20 @@ describe('ingest loader', () => {
     expect(all.sort()).toEqual([...paths].sort())
   })
 
-  it('stores every candidate with provenance from every registered source', async () => {
+  it('stores every candidate with provenance from every source that produced one', async () => {
     const { results, summary } = ingestOnce()
     await writeIngest(client, ctx, results, summary)
 
     const systems = await client.query<{ source_system: string }>(
       'SELECT DISTINCT source_system FROM source_records ORDER BY 1',
     )
-    expect(systems.rows.map((row) => row.source_system)).toEqual(
-      [...adapters.map((adapter) => adapter.sourceSystem)].sort(),
-    )
+    // Every source that produced candidates is stored; a freshly scaffolded source maps nothing
+    // until its first record is written, so it is not required here (its own unit test is).
+    const producing = results
+      .filter((result) => candidatesOf(result.batch).length > 0)
+      .map((result) => result.sourceSystem)
+    expect(producing).toEqual(expect.arrayContaining(ORIGINAL_SYSTEMS))
+    expect(systems.rows.map((row) => row.source_system)).toEqual([...producing].sort())
     const count = await client.query<{ n: string }>('SELECT count(*) AS n FROM source_records')
     expect(Number(count.rows[0]?.n)).toBe(summary.totals.records)
 
