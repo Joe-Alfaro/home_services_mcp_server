@@ -122,9 +122,13 @@ export const adapters: readonly SourceAdapter[] = [
   `expectInstant`, `expectIssuesFreeOf`, `issuesFor` and `one`. Cover at least: the pattern, purity
   (same input, same output), provenance, each status mapping, a zone-less time on both sides of the
   DST change, a missing end time, and that issue messages carry no PII.
-- [`test/unit/adapters/registry.test.ts`](../test/unit/adapters/registry.test.ts) pins the list of
-  systems. Add `'acme_crm'` to `ALL_SYSTEMS`, change `toHaveLength(6)` to `7`, and add
-  `acmeCrmAdapter` to the `arrayContaining` list. Its per-system checks (patterns under
+- [`test/unit/adapters/registry-contract.test.ts`](../test/unit/adapters/registry-contract.test.ts)
+  iterates the registry, so it checks the new adapter with no edits: exactly one registered
+  adapter per `SourceSystem` member (read from the `SOURCE_TRAITS` keys), a `SOURCE_TRAITS` entry
+  for each, and an empty, contract-shaped batch (only `info` issues) for no files.
+- [`test/unit/adapters/registry.test.ts`](../test/unit/adapters/registry.test.ts) still pins the
+  list of systems by hand. Add `'acme_crm'` to `ALL_SYSTEMS`, change `toHaveLength(6)` to `7`, and
+  add `acmeCrmAdapter` to the `arrayContaining` list. Its per-system checks (patterns under
   `sources/`, an empty batch for no files) then cover the new adapter. This is the only existing
   test you edit.
 - [`test/unit/architecture/r2-no-source-branching.test.ts`](../test/unit/architecture/r2-no-source-branching.test.ts)

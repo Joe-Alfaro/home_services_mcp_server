@@ -68,8 +68,27 @@ It worked when the summary lists six source systems (`jobber`, `housecall_pro`, 
 `spreadsheet`, `ics`, `profiles`), and the `total:` line reports `0 errors`. A missing folder
 fails fast with `ingest: data pack not found at ...`.
 
-If port 5434 is busy, pick another with `HSMCP_DB_PORT` (for example
-`HSMCP_DB_PORT=5435 npm run setup`) and set the same value for `npm start` and `npm run eval`.
+### Another port, or a second copy
+
+`docker-compose.yml` publishes Postgres on `127.0.0.1:${HSMCP_DB_PORT:-5434}` under the compose
+project `hsmcp`. If port 5434 is busy, or a copy of this repository is already running, give the
+new copy its own port and compose project. `COMPOSE_PROJECT_NAME` overrides the file's `name:`,
+so the second copy gets its own container and data volume (`<project>_pgdata`) instead of
+replacing the first:
+
+```sh
+export HSMCP_DB_PORT=5435 COMPOSE_PROJECT_NAME=hsmcp2
+npm run setup
+npm run eval
+```
+
+Every command reads the same `HSMCP_DB_PORT`: `src/config.ts` builds
+`postgres://hsmcp:hsmcp@localhost:<port>/hsmcp` for setup and ingest, and the same URL as
+`hsmcp_reader` for the MCP server, so `npm start` and `npm run eval` (which passes its environment
+to the server it starts) reach the right database when the variable is set in their shell. Set
+`DATABASE_URL` (and optionally `READER_DATABASE_URL`) instead to use a database outside Compose.
+Keep `COMPOSE_PROJECT_NAME` set for every `docker compose` command on that copy, including
+[teardown](#teardown).
 
 ## Connect an MCP client
 
@@ -97,6 +116,12 @@ Claude Code's `.mcp.json` and similar):
 ```
 
 If your client has no `cwd` option, use `"args": ["tsx", "/absolute/path/to/home_services_mcp_server/src/cli/mcp.ts"]`.
+
+Many clients start the server with only the `env` you list, not your shell's variables. If setup
+ran on a port other than 5434, add the same port, for example
+`"env": { "HS_TODAY": "2026-11-02", "HSMCP_DB_PORT": "5435" }`. For a database outside Compose,
+set `"READER_DATABASE_URL": "postgres://hsmcp_reader:hsmcp_reader@<host>:<port>/hsmcp"` (or
+`DATABASE_URL`, from which the reader URL is derived).
 
 ## Tools
 
@@ -199,6 +224,16 @@ A new source is one adapter module, one registry entry and one `SourceSystem` na
 traits; no core module or migration changes. [`docs/adding-a-source.md`](docs/adding-a-source.md)
 lists the exact steps and files, the invariants an adapter keeps, the checks to run and a prompt
 to hand to a coding agent.
+
+## Teardown
+
+```sh
+docker compose down      # stop and remove the Postgres container; the data volume stays
+docker compose down -v   # also delete the data volume (the next setup starts empty)
+```
+
+Run these from the repository root with the same `COMPOSE_PROJECT_NAME` (if any) that setup used.
+They only touch that compose project's container and its `<project>_pgdata` volume.
 
 ## Tests
 
