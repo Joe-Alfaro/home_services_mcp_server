@@ -63,8 +63,6 @@ clock, so answers about a fixed snapshot don't drift.
 
 ## What was cut
 
-- **R30, a seventh source in under an hour.** The adapter contract is built for it, but it wasn't
-  exercised with a real new source.
 - **R31, incremental sync.** Setup rebuilds everything in one transaction. Simple and idempotent,
   but it re-reads every source on every run.
 - **R32, access tiers** (internal versus partner detail, enforced by the server).
@@ -73,6 +71,19 @@ clock, so answers about a fixed snapshot don't drift.
 - **Deploys, hosted environments and live CRM or geocoder APIs.** Everything runs locally from the
   data pack.
 - **PostGIS and an ORM.** A half-mile haversine over a few thousand homes is cheap without them.
+
+## Adding a source (R30)
+
+A synthetic seventh source (an invented CSV CRM, made-up data only) was added end to end with
+`npm run new-source` and [`adding-a-source.md`](adding-a-source.md), on a branch that is
+deliberately not merged, so the shipped repo keeps six sources.
+
+- **Time: 10.7 minutes wall clock.** Scaffold 0.8, mapping to green 4.2, real ingest 2.2, gates
+  2.9.
+- **About 3.3 minutes of that went on three existing tests that pinned the six sources.** Those
+  now derive the list from `SOURCE_TRAITS`, so a repeat would take about 7.5 minutes.
+- **Result:** seven sources ingested with 0 errors; the eval still passes 6/6.
+- **Not exercised:** dedupe against existing providers, real partner data, and a new trade value.
 
 ## What breaks at 10,000 providers
 
@@ -100,7 +111,9 @@ clock, so answers about a fixed snapshot don't drift.
 
 ## What to build in week 2
 
-1. **R30: add a seventh source** through the adapter contract and time it, to prove the contract.
+1. **R30 follow-up: a seventh source with real overlap.** The synthetic run (see
+   [Adding a source](#adding-a-source-r30)) didn't exercise dedupe against existing providers,
+   real partner data or a new trade value.
 2. **R31: incremental sync.** Re-ingest one changed source without a full rebuild, including a job
    that moved from upcoming to completed, keeping canonical IDs stable.
 3. **R32: access tiers.** Internal versus partner detail levels, enforced by separate database

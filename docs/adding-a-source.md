@@ -6,9 +6,10 @@ module (`src/normalize/`, `src/resolve/`, `src/ingest/`, `src/availability/`, `s
 `src/mcp/`) changes, and no migration is needed: `source_records`, `ingest_issues` and the views
 store `source_system` as plain text.
 
-This path has not yet been exercised with a real new source (see R30 in
-[`decisions.md`](decisions.md#what-was-cut)). If a step below turns out wrong, fix this guide in
-the same change.
+This path was exercised end to end with a synthetic seventh source (an invented CSV CRM) in
+about 11 minutes; it has not yet been exercised with real partner data or dedupe against existing
+providers (see R30 in [`decisions.md`](decisions.md#adding-a-source-r30)). If a step below turns
+out wrong, fix this guide in the same change.
 
 The examples use a made-up source called `acme_crm`. Replace it with your source's name in
 `snake_case`.
