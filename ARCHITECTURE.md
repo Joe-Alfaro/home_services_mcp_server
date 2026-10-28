@@ -18,7 +18,7 @@ conservatively, and exposes the result to AI agents through a read-only, privacy
 ## Components and data flow
 
 ```text
-DATA_PACK_DIR (default _private/data_pack in the repo root; never committed)
+DATA_PACK_DIR (default data/ in the repo root; git-ignored, never committed)
   │
   ▼
 src/adapters/<source>.ts      one per source; pure parse(files, ctx) → CandidateBatch

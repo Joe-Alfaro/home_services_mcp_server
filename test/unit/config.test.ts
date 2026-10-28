@@ -7,7 +7,7 @@ describe('loadConfig', () => {
     const config = loadConfig({})
 
     expect(config.databaseUrl).toBe('postgres://hsmcp:hsmcp@localhost:5434/hsmcp')
-    expect(config.dataPackDir).toBe(path.join(REPO_ROOT, '_private/data_pack'))
+    expect(config.dataPackDir).toBe(path.join(REPO_ROOT, 'data'))
     expect(config.today).toBe('2026-11-02')
     expect(config.timeZone).toBe('America/Chicago')
     expect(config.now).toBe('2026-11-02T06:00:00.000Z')
