@@ -19,7 +19,7 @@ with none.
 ## Conventions used by the done checks
 
 - **Data pack:** the synthetic source data is never committed. Setup reads it from `DATA_PACK_DIR`
-  (default `_private/data_pack` inside the repo root). It holds `sources/jobber/`,
+  (default `data/` inside the repo root, git-ignored). It holds `sources/jobber/`,
   `sources/housecall_pro/`, `sources/workiz/`, `sources/spreadsheet/`, `sources/calendars/`,
   `sources/profiles/` and `reference/street_segments.csv`. The scrub check reads its term list from
   `SCRUB_TERMS_FILE` (default `_private/scrub_terms.txt` inside the repo root).
