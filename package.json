@@ -18,7 +18,8 @@
     "mcp": "tsx src/cli/mcp.ts",
     "prepare": "husky",
     "start": "tsx src/cli/mcp.ts",
-    "eval": "tsx eval/run.ts"
+    "eval": "tsx eval/run.ts",
+    "new-source": "tsx scripts/new-source.ts"
   },
   "license": "UNLICENSED",
   "type": "module",
@@ -41,6 +42,7 @@
     "husky": "^9.1.7",
     "prettier": "^3.9.10",
     "testcontainers": "^12.2.1",
+    "ts-morph": "^28.0.0",
     "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.72.1",

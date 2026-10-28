@@ -13,6 +13,55 @@ the same change.
 The examples use a made-up source called `acme_crm`. Replace it with your source's name in
 `snake_case`.
 
+## Scaffold it
+
+`npm run new-source` does steps 1 to 5 below as a stub you then fill in:
+
+```sh
+npm run new-source -- acme_crm --role crm --format json --crm-pattern 'acme' --dry-run  # the plan
+npm run new-source -- acme_crm --role crm --format json --crm-pattern 'acme'
+```
+
+- `<name>` (required): the `snake_case` name, also the folder under `data/sources/`. It must match
+  `^[a-z][a-z0-9]*(_[a-z0-9]+)*$` and must not be a registered source.
+- `--role` (required): `crm`, `log`, `calendar`, `profile` or `other`; see step 2.
+- `--format`: `json` (default), `csv` or `ics`. It picks the fixture and the reader the stub starts
+  from.
+- `--crm-pattern <regex>`: `crm` only. The `declaredCrmPattern`, always case-insensitive. Without
+  it, the name with any separator (`/acme[ _-]?crm/i` for `acme_crm`). Other roles get `null`.
+- `--dry-run`: print the files it would create or edit and the traits entry, and write nothing.
+- `--skip-checks`: skip the type check and adapter tests it runs at the end.
+
+What it does:
+
+- Adds `'acme_crm'` to the end of the `SourceSystem` union, an entry at the end of
+  `SOURCE_TRAITS`, and `acmeCrmAdapter` (import and list entry) to the registry. These edits are
+  located through the TypeScript syntax tree (ts-morph) and only add lines.
+- Creates `src/adapters/acmeCrm.ts`: `patterns: ['sources/acme_crm/*/*.json']`, a `parse` that
+  reads each file through the `shared.ts` helpers (an `error` issue for an unreadable file) and
+  maps nothing yet, a TODO `mapRecord` stub that reports each record with an
+  `acme_crm.not_mapped` info issue, and the invariants below as comments.
+- Creates an invented fixture, `test/fixtures/acme_crm/sample_account/records.json` (`.csv` or
+  `.ics` for those formats).
+- Creates `test/unit/adapters/acmeCrm.test.ts`: passing contract checks (patterns, claimed
+  fixtures, empty batch for no files, no error issues, purity, no fixture PII in issue messages)
+  and one `it.fails('map your first record', ...)` that expects the first candidate of the role's
+  kind (a job for `crm` and `log`, a calendar block for `calendar`, a provider for `profile`, any
+  candidate for `other`).
+- Runs `npm run typecheck` and the new test with the registry contract test, then prints the next
+  steps and the [agent prompt](#prompt-for-a-coding-agent) with the names filled in. A run takes
+  a few seconds.
+
+It is safe to re-run: it refuses (nonzero exit, nothing written) an invalid or registered name, an
+unknown role or format, and any target file or fixture folder that already exists. It never edits
+an existing test, and none needs editing: the existing tests read the systems from `SOURCE_TRAITS`
+(see step 5), so `npm test` passes straight after the scaffold, with `map your first record`
+reported as the one expected failure.
+
+Then: put the real files in `data/sources/acme_crm/`, adjust the
+pattern and fixtures to the real layout, write the mapping (the TODOs), drop the `.fails` marker on
+`map your first record`, and add tests per mapping. The steps below explain each piece.
+
 ## Steps
 
 ### 1. Name the source
@@ -126,14 +175,19 @@ export const adapters: readonly SourceAdapter[] = [
   iterates the registry, so it checks the new adapter with no edits: exactly one registered
   adapter per `SourceSystem` member (read from the `SOURCE_TRAITS` keys), a `SOURCE_TRAITS` entry
   for each, and an empty, contract-shaped batch (only `info` issues) for no files.
-- [`test/unit/adapters/registry.test.ts`](../test/unit/adapters/registry.test.ts) still pins the
-  list of systems by hand. Add `'acme_crm'` to `ALL_SYSTEMS`, change `toHaveLength(6)` to `7`, and
-  add `acmeCrmAdapter` to the `arrayContaining` list. Its per-system checks (patterns under
-  `sources/`, an empty batch for no files) then cover the new adapter. This is the only existing
-  test you edit.
-- [`test/unit/architecture/r2-no-source-branching.test.ts`](../test/unit/architecture/r2-no-source-branching.test.ts)
-  reads the systems from the registry, so it checks the new name automatically: core code must not
-  compare against `'acme_crm'` anywhere.
+- No existing test needs a hand edit. These read the systems from the `SOURCE_TRAITS` keys or the
+  registry and pick up the new one automatically:
+  - [`test/unit/adapters/registry.test.ts`](../test/unit/adapters/registry.test.ts): exactly one
+    registered adapter per system, patterns under `sources/` and an empty batch for no files for
+    each, and the six original systems still present.
+  - [`test/unit/architecture/r2-no-source-branching.test.ts`](../test/unit/architecture/r2-no-source-branching.test.ts):
+    core code must not compare against `'acme_crm'` anywhere outside `src/adapters/`.
+  - [`test/unit/scripts/new-source.test.ts`](../test/unit/scripts/new-source.test.ts): the
+    scaffold appends one system to whatever is already registered.
+  - [`test/integration/ingest.test.ts`](../test/integration/ingest.test.ts), run by
+    `npm run test:integration`: loads `test/fixtures/<folder>/` for each adapter's
+    `sources/<folder>/` pattern and stores every candidate they produce, so name the
+    fixture folder after the pattern folder (the scaffold does).
 
 ### 6. Put the real files in place
 
@@ -192,7 +246,7 @@ npm run ingest           # with the real files in data/sources/acme_crm/
 npm run eval             # the six benchmark questions
 ```
 
-- `npm test` passes, including your new test file and the updated registry test.
+- `npm test` passes, including your new test file, with no edits to existing tests.
 - `npm run ingest` prints an `acme_crm: N files read` block, `unclaimed files: none`, and a
   `total:` line with `0 errors` and `0 unmapped statuses`.
 - `npm run eval` still reports 6/6.
@@ -206,11 +260,13 @@ You are adding a new data source, <name>, to this repository through the adapter
 docs/adding-a-source.md exactly, step by step.
 
 Rules:
+- If npm run new-source already scaffolded <name>, start from its TODOs: drop the .fails
+  marker on 'map your first record' in test/unit/adapters/<camelName>.test.ts and see it fail,
+  then write the mapping; replace the invented fixture with ones shaped like the real files.
 - Test-first: write test/unit/adapters/<camelName>.test.ts and invented fixtures under
   test/fixtures/<folder>/ first, run npm test and see them fail, then write the adapter.
-- Never edit other tests to make them pass. The only existing test you may change is
-  test/unit/adapters/registry.test.ts: add the new system to ALL_SYSTEMS, the adapter to the
-  arrayContaining list, and raise the count by one.
+- Never edit existing tests. They read the systems from SOURCE_TRAITS, so none needs a change
+  for a new source; if one fails, stop and say why.
 - No real data in fixtures, docs or commit messages: invented names, 555-01xx phones,
   example.com emails and made-up addresses only. Real files go in data/sources/<folder>/, which
   is git-ignored.
