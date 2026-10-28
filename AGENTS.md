@@ -57,5 +57,6 @@ ESLint (typescript-eslint) and Prettier. npm for packages. No paid services and 
 
 ## Adding a data source
 
-Follow [`docs/adding-a-source.md`](docs/adding-a-source.md): the exact steps and files, the
+Start with `npm run new-source -- <name> --role <role>` (`--dry-run` first to see the plan), then
+follow [`docs/adding-a-source.md`](docs/adding-a-source.md): the exact steps and files, the
 invariants an adapter keeps, the checks, and a prompt to hand to a coding agent.
