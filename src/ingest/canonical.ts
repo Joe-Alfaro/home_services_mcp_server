@@ -1,14 +1,16 @@
 import { createHash } from 'node:crypto'
 import { DateTime } from 'luxon'
-import type {
-  CalendarBlockCandidate,
-  Candidate,
-  CandidateBatch,
-  DeclaredHoursCandidate,
-  JobCandidate,
-  ProviderCandidate,
-  SourceRef,
-  SourceSystem,
+import {
+  SOURCE_TRAITS,
+  hasRole,
+  type CalendarBlockCandidate,
+  type Candidate,
+  type CandidateBatch,
+  type DeclaredHoursCandidate,
+  type JobCandidate,
+  type ProviderCandidate,
+  type SourceRef,
+  type SourceSystem,
 } from '../adapters/types.ts'
 import { addressKey, normalizeAddress, type NormalizedAddress } from '../normalize/address.ts'
 import type { StreetIndex } from '../normalize/geocode.ts'
@@ -192,11 +194,13 @@ const BOOKED_STATUSES: ReadonlySet<JobRow['status']> = new Set([
   'in_progress',
 ])
 
-const CRM_SYSTEMS: ReadonlyArray<[SourceSystem, RegExp]> = [
-  ['jobber', /jobber/i],
-  ['housecall_pro', /housecall|\bhcp\b/i],
-  ['workiz', /workiz/i],
-]
+/** CRMs a profile may declare, each with the pattern that recognises it in the profile's text. */
+const CRM_SYSTEMS: ReadonlyArray<[SourceSystem, RegExp]> = Object.entries(SOURCE_TRAITS).flatMap(
+  ([system, traits]): [SourceSystem, RegExp][] =>
+    traits.role === 'crm' && traits.declaredCrmPattern !== null
+      ? [[system as SourceSystem, traits.declaredCrmPattern]]
+      : [],
+)
 
 function sha256(text: string): string {
   return createHash('sha256').update(text).digest('hex')
@@ -226,9 +230,9 @@ function providerRow(
   hours: DeclaredHoursCandidate | undefined,
   observedZips: readonly string[],
 ): ProviderRow {
-  const profile = candidates.find((candidate) => candidate.ref.sourceSystem === 'profiles')
+  const profile = candidates.find((candidate) => hasRole(candidate.ref.sourceSystem, 'profile'))
   // A calendar is named after its owner (G27), so its name is never shown as a business name.
-  const named = candidates.filter((candidate) => candidate.ref.sourceSystem !== 'ics')
+  const named = candidates.filter((candidate) => !hasRole(candidate.ref.sourceSystem, 'calendar'))
   const aliases = unique([
     ...(profile === undefined ? [] : [profile.businessName]),
     ...named.map((candidate) => candidate.businessName),
@@ -260,7 +264,7 @@ function crmConflict(
   providerId: string,
   candidates: readonly ProviderCandidate[],
 ): ProviderConflictRow[] {
-  const profile = candidates.find((candidate) => candidate.ref.sourceSystem === 'profiles')
+  const profile = candidates.find((candidate) => hasRole(candidate.ref.sourceSystem, 'profile'))
   if (profile?.declaredCrm == null) return []
   const declaredCrm = profile.declaredCrm
   const declared = CRM_SYSTEMS.filter(([, pattern]) => pattern.test(declaredCrm)).map(

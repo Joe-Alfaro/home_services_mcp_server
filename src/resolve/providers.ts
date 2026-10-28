@@ -1,4 +1,9 @@
-import type { ProviderCandidate, ProviderKey, SourceRef } from '../adapters/types.ts'
+import {
+  hasRole,
+  type ProviderCandidate,
+  type ProviderKey,
+  type SourceRef,
+} from '../adapters/types.ts'
 import { emailDomain, normalizeBusinessName, websiteHost } from '../normalize/name.ts'
 import { normalizePhone } from '../normalize/phone.ts'
 import { normalizeTrade, type Trade } from '../normalize/trade.ts'
@@ -289,10 +294,8 @@ export function resolveProviders(candidates: readonly ProviderInput[]): Provider
   const providers = [...clusters.values()].map((members): ResolvedProvider => {
     const items = members.map((i) => prepared[i]).filter((p) => p !== undefined)
     // Profiles describe the business as it presents itself, so their names and trades lead.
-    const ordered = [
-      ...items.filter((p) => p.input.ref.sourceSystem === 'profiles'),
-      ...items.filter((p) => p.input.ref.sourceSystem !== 'profiles'),
-    ]
+    const isProfile = (p: (typeof items)[number]) => hasRole(p.input.ref.sourceSystem, 'profile')
+    const ordered = [...items.filter(isProfile), ...items.filter((p) => !isProfile(p))]
     const aliases = [...new Set(ordered.map((p) => p.input.businessName))]
     const providerKeys = [...new Set(items.map((p) => p.input.providerKey))]
     return {

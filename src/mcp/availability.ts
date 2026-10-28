@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon'
 import type pg from 'pg'
+import { hasRole } from '../adapters/types.ts'
 import type { Confidence } from '../availability/confidence.ts'
 import {
   computeAvailability,
@@ -83,7 +84,9 @@ function iso(value: Date | null): string | null {
 }
 
 /** Systems that do not confirm a booking on their own: the hand-kept log and its calendar. */
-const NON_CRM_SYSTEMS = new Set(['spreadsheet', 'ics'])
+function confirmsOnItsOwn(system: string): boolean {
+  return !hasRole(system, 'log') && !hasRole(system, 'calendar')
+}
 
 const CSV_ONLY_REASON =
   'booking recorded only in the CSV job log (not confirmed by a CRM or calendar; blocks, cautious)'
@@ -98,9 +101,9 @@ function workConfidence(
   row: WorkRow,
   mirrors: readonly BlockRow[],
 ): Pick<BusyItem, 'status' | 'confidence' | 'reasons'> {
-  const crm = row.source_systems.some((system) => !NON_CRM_SYSTEMS.has(system))
+  const crm = row.source_systems.some(confirmsOnItsOwn)
   if (crm) return { status: row.status, confidence: 'high' }
-  const csvOnly = row.source_systems.every((system) => system === 'spreadsheet')
+  const csvOnly = row.source_systems.every((system) => hasRole(system, 'log'))
   if (csvOnly && mirrors.length === 0) {
     return { status: row.status, confidence: 'low', reasons: [CSV_ONLY_REASON] }
   }
