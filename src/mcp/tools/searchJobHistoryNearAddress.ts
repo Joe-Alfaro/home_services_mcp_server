@@ -10,7 +10,13 @@ import { presentJob } from '../present.ts'
 import { mergeSources } from '../privacy.ts'
 import { respond } from '../result.ts'
 import { intField, localDateField, textField, tradeField } from '../schemas.ts'
-import { lastMonthsWindow, presentWindow, windowInstants, type LocalWindow } from '../time.ts'
+import {
+  lastMonthsWindow,
+  presentWindow,
+  windowInstants,
+  type LocalWindow,
+  SERVER_TODAY_NOTE,
+} from '../time.ts'
 
 const METERS_PER_MILE = 1609.344
 const MAX_RADIUS_MILES = 5
@@ -29,6 +35,8 @@ Do not use it for one home's own history (use get_property_service_history inste
 
 Parameters: address (street address with number, street and 5-digit zip), radiusMiles (0 < r <= 5), lastMonths (1-60) or since/until (YYYY-MM-DD, until exclusive), groupBy ("trade"), limit (1-${String(MAX_LIMIT)} jobs per page, default ${String(DEFAULT_LIMIT)}), cursor (nextCursor from the previous page), trade (optional, filters the paged list).
 Privacy: homes are shown as "4500 block of Live Oak St" + zip; only the house number you supplied is echoed.
+
+${SERVER_TODAY_NOTE}
 
 Example: {"address": "4512 Live Oak St, Dallas, TX 75204", "radiusMiles": 0.5, "lastMonths": 24, "groupBy": "trade"}`
 
@@ -260,6 +268,7 @@ export async function searchJobHistoryNearAddress(input: Input, options: ServerO
 
   return {
     query: {
+      today: options.today,
       address: input.address,
       block: caller.normalized.blockLabel,
       zip: caller.normalized.zip,

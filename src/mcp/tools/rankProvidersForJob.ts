@@ -20,7 +20,13 @@ import {
 import { mergeSources, type Source } from '../privacy.ts'
 import { respond } from '../result.ts'
 import { intField, textField, tradeField, windowField, zipField } from '../schemas.ts'
-import { presentWindow, relativeWindow, windowInstants, WINDOWS } from '../time.ts'
+import {
+  presentWindow,
+  relativeWindow,
+  windowInstants,
+  WINDOWS,
+  SERVER_TODAY_NOTE,
+} from '../time.ts'
 
 const DESCRIPTION = `Rank every provider of a trade for one job near a zip in a time window, with a 0-100 score and the factors behind it, each citing its sources.
 
@@ -29,6 +35,8 @@ Use when the question asks who is the best fit / who to recommend for a specific
 Do not use it just to list providers or openings (use find_providers instead) or to look up one named provider (use get_provider_profile).
 
 Parameters: trade (enum), service (free text, e.g. "water heater replacement"), nearZip (5-digit string), window (${WINDOWS.join(' | ')}), jobMinutes (optional 30-720; default from the service, 180 for a water heater replacement).
+
+${SERVER_TODAY_NOTE}
 
 Example: {"trade": "plumbing", "service": "water heater replacement", "nearZip": "75206", "window": "this_week"}`
 
@@ -369,6 +377,7 @@ export async function rankProvidersForJob(input: Input, options: ServerOptions) 
 
   return {
     query: {
+      today: options.today,
       trade: input.trade,
       service: input.service,
       mappedService: match.label,

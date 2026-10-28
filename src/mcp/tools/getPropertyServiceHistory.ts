@@ -57,6 +57,7 @@ export async function getPropertyServiceHistory(input: Input, options: ServerOpt
   }
   if (home === undefined) {
     return {
+      query: { today: options.today },
       property: { ...property, matched: false },
       count: 0,
       items: [],
@@ -77,6 +78,7 @@ export async function getPropertyServiceHistory(input: Input, options: ServerOpt
     jobs.filter((job) => job.status === 'completed').map((job) => job.providerId),
   )
   return {
+    query: { today: options.today },
     property: {
       ...property,
       matched: true,

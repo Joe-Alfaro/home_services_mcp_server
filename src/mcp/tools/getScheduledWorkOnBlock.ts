@@ -7,7 +7,7 @@ import { ToolInputError } from '../errors.ts'
 import { presentJob } from '../present.ts'
 import { respond } from '../result.ts'
 import { intField, textField, zipField } from '../schemas.ts'
-import { nextDaysWindow, presentWindow, windowInstants } from '../time.ts'
+import { nextDaysWindow, presentWindow, windowInstants, SERVER_TODAY_NOTE } from '../time.ts'
 
 const DESCRIPTION = `Upcoming booked work (scheduled or in progress) on one hundred-block of a street, e.g. the 4500 block of Live Oak St.
 
@@ -16,6 +16,8 @@ Use when the question is "what work is scheduled on the <N> block of <street>" o
 Do not use it for past work (use search_job_history_near_address or get_property_service_history instead) or for a provider's free time (use get_provider_openings).
 
 Parameters: street (name and type, e.g. "Live Oak St"), blockNumber (house number of the block start, e.g. 4500; any house number is rounded down to its block), zip (optional 5-digit), nextDays (1-30).
+
+${SERVER_TODAY_NOTE}
 
 Example: {"street": "Live Oak St", "blockNumber": 4500, "zip": "75204", "nextDays": 14}`
 
@@ -77,6 +79,7 @@ export async function getScheduledWorkOnBlock(input: Input, options: ServerOptio
     [streetName, streetType, block, input.zip ?? null, instants.from, instants.to],
   )
   return {
+    query: { today: options.today },
     block: blockLabel,
     ...(input.zip === undefined ? {} : { zip: input.zip }),
     ...(match.status === 'fuzzy' ? { streetMatchedAs: `${streetName} ${streetType}` } : {}),
