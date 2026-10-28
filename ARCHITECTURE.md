@@ -310,6 +310,13 @@ export interface SourceAdapter {
 }
 ```
 
+Each source system also declares its role in the contract (`SOURCE_TRAITS` in
+`src/adapters/types.ts`): `crm` (with the pattern that recognises it in a profile's declared CRM),
+`log` (hand-kept: identical rows collapse, bookings only it records are unconfirmed), `calendar`
+(named after its owner, never a business name), `profile` (its names, trades and declared facts
+lead) or `other`. Core code reads the role through `hasRole(system, role)` and never compares a
+source-system name (R2).
+
 Per-source rules every adapter test checks:
 
 | Source        | Provider                                   | Properties                                   | Jobs                                                                                                                                                                                           | Other                                                                                    |

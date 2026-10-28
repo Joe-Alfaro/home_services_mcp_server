@@ -215,6 +215,49 @@ export interface SourceFile {
   content: string
 }
 
+/**
+ * What a source is to the core (R2). Core code reads these roles, never a source-system name, so a
+ * new source declares its role here alongside its SourceSystem entry and no core module changes.
+ *
+ * - crm: a field-service CRM; its bookings are confirmed on their own (D-143).
+ * - log: a hand-kept job log; identical rows are one job (G16) and a booking only it records is
+ *   unconfirmed (D-143).
+ * - calendar: a calendar export, named after its owner rather than the business (G27).
+ * - profile: the provider's own profile; its names, trades and declared facts lead.
+ * - other: no special role (the default for a system without an entry).
+ */
+export type SourceRole = 'crm' | 'log' | 'calendar' | 'profile' | 'other'
+
+export interface SourceTraits {
+  readonly role: SourceRole
+  /** For a CRM: matches a profile's free-text declared CRM that names this system. */
+  readonly declaredCrmPattern: RegExp | null
+}
+
+const OTHER_SOURCE: SourceTraits = { role: 'other', declaredCrmPattern: null }
+
+/** Each source system's traits. Order is significant: declared CRMs are reported in this order. */
+export const SOURCE_TRAITS: Readonly<Record<SourceSystem, SourceTraits>> = {
+  jobber: { role: 'crm', declaredCrmPattern: /jobber/i },
+  housecall_pro: { role: 'crm', declaredCrmPattern: /housecall|\bhcp\b/i },
+  workiz: { role: 'crm', declaredCrmPattern: /workiz/i },
+  spreadsheet: { role: 'log', declaredCrmPattern: null },
+  ics: { role: 'calendar', declaredCrmPattern: null },
+  profiles: { role: 'profile', declaredCrmPattern: null },
+}
+
+/** The traits of a source system, as stored or emitted; an unknown system has no special role. */
+export function sourceTraits(sourceSystem: string): SourceTraits {
+  return Object.hasOwn(SOURCE_TRAITS, sourceSystem)
+    ? SOURCE_TRAITS[sourceSystem as SourceSystem]
+    : OTHER_SOURCE
+}
+
+/** True when the source system plays the role. */
+export function hasRole(sourceSystem: string, role: SourceRole): boolean {
+  return sourceTraits(sourceSystem).role === role
+}
+
 export interface SourceAdapter {
   readonly sourceSystem: SourceSystem
   /** Glob(s) relative to dataPackDir, e.g. ["sources/workiz/<account>/*.json"]. */

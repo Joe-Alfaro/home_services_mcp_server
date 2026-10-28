@@ -1,5 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
+import { hasRole } from '../../adapters/types.ts'
 import type { Confidence } from '../../availability/confidence.ts'
 import { classifyJobText, type Service } from '../../normalize/trade.ts'
 import {
@@ -152,7 +153,7 @@ function citeJobs(jobs: readonly Job[]): Source[] {
 }
 
 function profileSources(provider: Provider): Source[] {
-  const profile = provider.sources.filter((source) => source.sourceSystem === 'profiles')
+  const profile = provider.sources.filter((source) => hasRole(source.sourceSystem, 'profile'))
   return profile.length > 0 ? profile : provider.sources
 }
 

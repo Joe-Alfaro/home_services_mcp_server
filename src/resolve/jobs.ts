@@ -1,14 +1,15 @@
 import { DateTime } from 'luxon'
-import type {
-  CalendarBlockCandidate,
-  Instant,
-  JobCandidate,
-  JobKind,
-  JobStatus,
-  PropertyKey,
-  ProviderKey,
-  SourceRef,
-  TimeBasis,
+import {
+  hasRole,
+  type CalendarBlockCandidate,
+  type Instant,
+  type JobCandidate,
+  type JobKind,
+  type JobStatus,
+  type PropertyKey,
+  type ProviderKey,
+  type SourceRef,
+  type TimeBasis,
 } from '../adapters/types.ts'
 import { compareText, refKey, stableId } from './ids.ts'
 
@@ -191,14 +192,15 @@ function foldEstimates(groups: Group[]): Group[] {
 }
 
 /**
- * G16, D-084: CSV rows identical after normalization collapse into one job. Status and notes are
- * part of the signature, so a cancelled copy of a booked row stays its own job.
+ * G16, D-084: rows of a hand-kept log (the CSV) identical after normalization collapse into one
+ * job. Status and notes are part of the signature, so a cancelled copy of a booked row stays its
+ * own job.
  */
 function collapseDuplicateRows(groups: Group[]): Group[] {
   const bySignature = new Map<string, Group>()
   return groups.filter((group) => {
     const job = group.primary
-    if (job.ref.sourceSystem !== 'spreadsheet') return true
+    if (!hasRole(job.ref.sourceSystem, 'log')) return true
     const signature = JSON.stringify([
       group.account,
       group.providerId,
