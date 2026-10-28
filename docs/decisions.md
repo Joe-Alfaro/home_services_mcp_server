@@ -126,8 +126,51 @@ clock, so answers about a fixed snapshot don't drift.
   minutes when judging openings. The data suggests closer to four or five hours; at 270 minutes the
   lower half of the ranking reorders. Callers can pass `jobMinutes`. Q6 also ranks only providers
   whose declared trade is plumbing, so water-heater jobs done by handymen don't count.
+- **Bookings with no end time block a flat 60 minutes (G12).** The requirement asks for a
+  trade-default length; the engine uses one 60-minute default (`DEFAULT_DURATION_MINUTES` in
+  `src/availability/engine.ts`) for every trade. It applies only to a booking that has a start but
+  no end (some Jobber-style visits); undated work blocks nothing. The block carries a "no end time:
+  default duration assumed" reason but keeps its confidence, so an opening right after a long job
+  can be shown as `high`. Such bookings are also left out of the observed-concurrency and
+  inferred-hours counts. Per-service lengths from data are week-2 item 5.
 - **Two street-typo mirrors still split.** Street typos are corrected only against the street
   reference, which covers the target zips. Two jobs whose street is misspelled outside that area
   don't merge with the calendar event for the same visit, so each shows as two bookings.
 - **Setup assumes the database exists.** Pointing `DATABASE_URL` at a new database name requires
   creating it first.
+
+## How each trap is handled
+
+Each trap found by profiling the data is a G-ID in the requirements' Gotchas section, with its
+done check; `ARCHITECTURE.md` maps each one to the code that handles it.
+
+| ID  | Trap                                                                 | Handling                                                                                       |
+| --- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| G1  | UTC, zone-less local and mixed-zone ICS times                        | Zone-less times read as America/Chicago with luxon, DST-aware; independent of the host zone.   |
+| G2  | A zone-less time in the repeated hour on 2026-11-01                  | The earlier (CDT) instant; a nonexistent spring-forward time moves forward.                    |
+| G3  | A paged CRM repeats a job across a page boundary                     | Pages read in numeric order; repeated IDs dropped with a warning issue.                        |
+| G4  | Estimates look like jobs; scheduled estimates take time              | `kind: 'estimate'`: never counted as work, but a scheduled one blocks its slot.                |
+| G5  | An approved estimate and the job made from it                        | Linked by the original estimate ID; one service, the estimate cited as a source.               |
+| G6  | One job with many visits; open-ended recurring rules                 | Parent row plus one row per listed visit; per-visit status and money; rules never expanded.    |
+| G7  | Money in cents, dollar strings, `$1,234.50` and blanks               | Integer `amount_cents` or `null`.                                                              |
+| G8  | Different status words; cancellation in notes or a summary prefix    | One canonical status set; notes and `CXL` prefixes read; stale open items become `limbo`.      |
+| G9  | Rescheduling only as a year-less free-text note                      | A `rescheduled_from` flag with the inferred year; no extra job, the old slot never blocks.     |
+| G10 | A completed job dated after "today"                                  | `suspect_date` issue; kept in history, never a booking.                                        |
+| G11 | Jobs spanning several days, past declared hours                      | Clipped to each day's hours with a `multi_day_span` reason; no hours conflict.                 |
+| G12 | Undated work; visits with a start but no end                         | Null times, status `unscheduled`, no block; a missing end blocks 60 minutes with a reason.     |
+| G13 | One business across two CRM accounts and a profile; a name lookalike | Merged on phone (0.95), email domain or website; a shared name prefix alone never merges.      |
+| G14 | A rebranded business with old- and new-name accounts                 | Merged on phone; both names kept as aliases.                                                   |
+| G15 | Technician names repeated across unrelated businesses                | Owner and technician names are never a match key.                                              |
+| G16 | Messy CSV log: preamble, loose dates and times, duplicates, no zip   | Preamble skipped; dates resolved against the export date; duplicates collapsed with a count.   |
+| G17 | ICS all-day, unbounded and DST-crossing RRULEs, tentative, mirrors   | Exclusive all-day end; RRULEs expanded in local time inside the window; mirrors merged.        |
+| G18 | A provider's CSV log and calendar disagree                           | Merged within 30 minutes (0.6 when the text differs); single-source items lower confidence.    |
+| G19 | Address variants, units, ZIP+4 and street typos                      | Normalized address key; bounded fuzzy street match against the reference at lower confidence.  |
+| G20 | Free-form profile hours, CRM names and phone formats                 | Hours parsed to weekly windows or flagged; 24/7 claims infer hours; phones to 10 digits.       |
+| G21 | Hundreds of free-text job titles; naive keywords misfire             | Provider trade first, refined by a curated phrase map with water-heater subtypes.              |
+| G22 | Street reference covers only the target zips                         | Interpolated on segments; otherwise `geocode_method = 'none'` and never placed in a radius.    |
+| G23 | Profile versus observed trades, zips, hours, crew and CRMs           | `provider_conflicts` rows; both shown; crew capped by observed concurrency at `medium`.        |
+| G24 | The same home under many spellings; units in one building            | One normalized key per home; units are separate homes; out-of-area keys include the zip.       |
+| G25 | Snapshot edges: after-midnight visits, an older CSV export           | Windows on local midnights from the configured "today", never the clock.                       |
+| G26 | Records before the history window or outside the area                | Window filter on local time; out-of-area records kept but outside radius answers.              |
+| G27 | Homeowner PII in summaries, calendar names, CSV and CRM rows         | Contacts only in `homeowner_contacts`; free text redacted; the reader role is denied.          |
+| G28 | The same house number on another street in the same zip              | Matching needs the street, not number plus zip; the fuzzy threshold rejects unrelated streets. |
