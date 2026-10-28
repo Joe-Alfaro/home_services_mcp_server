@@ -193,6 +193,13 @@ units. Availability is computed per request by `src/availability/`. See
 Migrations are plain SQL files named `NNNN_name.sql` in `migrations/`, applied in order and
 recorded in `schema_migrations`. Never edit an applied migration; add a new one.
 
+## Adding a data source
+
+A new source is one adapter module, one registry entry and one `SourceSystem` name with its
+traits; no core module or migration changes. [`docs/adding-a-source.md`](docs/adding-a-source.md)
+lists the exact steps and files, the invariants an adapter keeps, the checks to run and a prompt
+to hand to a coding agent.
+
 ## Tests
 
 Unit tests need nothing running. Integration tests start a disposable Postgres container through
