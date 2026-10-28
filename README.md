@@ -26,19 +26,50 @@ Design: [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 - Node.js 24 and npm
 - Docker with Compose v2, running
-- The source data pack in a local folder (see `DATA_PACK_DIR` below). It is not part of this
-  repository.
+- The source data pack in a local folder (see [the data pack](#1-the-data-pack) below). It is not
+  part of this repository.
+
+**API keys:** none. No API keys and no `.env` file are needed. The server, `npm run setup` and
+`npm run eval` make no LLM or network calls; everything runs against the local Postgres. An MCP
+client you connect (for example Claude Desktop) uses its own account.
 
 ## Setup
 
+### 1. The data pack
+
+Copy the contents of the provided data pack folder into [`./data/`](data/README.md) in the
+repository root, as they are, or leave the pack where it is and set `DATA_PACK_DIR` to its absolute
+path. Everything in `data/` except its README is git-ignored. Setup expects this layout:
+
+```text
+data/
+  sources/
+    jobber/*.json
+    housecall_pro/<company>/*.json
+    workiz/<account>/*.json
+    spreadsheet/*.csv
+    calendars/*.ics
+    profiles/*.json
+  reference/street_segments.csv
+```
+
+### 2. Install and set up
+
 ```sh
 npm install
-npm run setup
+npm run setup     # or: DATA_PACK_DIR=/absolute/path/to/data_pack npm run setup
 ```
 
 `npm run setup` starts Postgres (`docker compose up -d --wait`, compose project `hsmcp`, host port
 5434), applies migrations, ingests the data pack and prints a per-source summary. It is safe to
 run again: a second run leaves the same rows.
+
+It worked when the summary lists six source systems (`jobber`, `housecall_pro`, `workiz`,
+`spreadsheet`, `ics`, `profiles`), and the `total:` line reports `0 errors`. A missing folder
+fails fast with `ingest: data pack not found at ...`.
+
+If port 5434 is busy, pick another with `HSMCP_DB_PORT` (for example
+`HSMCP_DB_PORT=5435 npm run setup`) and set the same value for `npm start` and `npm run eval`.
 
 ## Connect an MCP client
 
@@ -113,35 +144,38 @@ per question and the pass rate. It exits 1 when any question fails. Run `npm run
 
 ## Environment variables
 
-| Variable                | Default                                       | Purpose                                                                 |
-| ----------------------- | --------------------------------------------- | ----------------------------------------------------------------------- |
-| `DATABASE_URL`          | `postgres://hsmcp:hsmcp@localhost:5434/hsmcp` | Database setup and ingest use. The database must exist.                 |
-| `HSMCP_DB_PORT`         | `5434`                                        | Host port for the Compose Postgres; also used by the default URL.       |
-| `READER_DATABASE_URL`   | `DATABASE_URL` as `hsmcp_reader`              | Connection `npm start` uses (the read-only role).                       |
-| `HSMCP_READER_PASSWORD` | `hsmcp_reader` (local only)                   | Password for `hsmcp_reader` when `READER_DATABASE_URL` is not set.      |
-| `DATA_PACK_DIR`         | `_private/data_pack` (in the repo root)       | Folder holding the source data pack.                                    |
-| `HS_TODAY`              | `2026-11-02`                                  | The service's "today" (YYYY-MM-DD, America/Chicago). Never the clock.   |
-| `HS_NOW`                | midnight of `HS_TODAY`, America/Chicago       | The service's "now". Zone-less values are read as America/Chicago.      |
-| `SCRUB_TERMS_FILE`      | `_private/scrub_terms.txt` (in the repo root) | Terms the scrub check forbids in tracked files, branch and commit text. |
+| Variable                | Default                                       | Purpose                                                                                  |
+| ----------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `DATABASE_URL`          | `postgres://hsmcp:hsmcp@localhost:5434/hsmcp` | Database setup and ingest use. The database must exist.                                  |
+| `HSMCP_DB_PORT`         | `5434`                                        | Host port for the Compose Postgres; also used by the default URL.                        |
+| `READER_DATABASE_URL`   | `DATABASE_URL` as `hsmcp_reader`              | Connection `npm start` uses (the read-only role).                                        |
+| `HSMCP_READER_PASSWORD` | `hsmcp_reader` (local only)                   | Password for `hsmcp_reader` when `READER_DATABASE_URL` is not set.                       |
+| `DATA_PACK_DIR`         | `data/` (in the repo root)                    | Folder holding the source data pack.                                                     |
+| `HS_TODAY`              | `2026-11-02`                                  | The service's "today" (YYYY-MM-DD, America/Chicago). Never the clock.                    |
+| `HS_NOW`                | midnight of `HS_TODAY`, America/Chicago       | The service's "now". Zone-less values are read as America/Chicago.                       |
+| `SCRUB_TERMS_FILE`      | `_private/scrub_terms.txt` (in the repo root) | Maintainer only: terms the scrub check forbids in tracked files, branch and commit text. |
 
 ## Scripts
 
-| Script                     | What it does                                                            |
-| -------------------------- | ----------------------------------------------------------------------- |
-| `npm run setup`            | Start Postgres, migrate, ingest.                                        |
-| `npm run db:up`            | Start Postgres only and wait until healthy.                             |
-| `npm run migrate`          | Apply pending SQL migrations from `migrations/`.                        |
-| `npm run ingest`           | Migrate, then load the data pack and build the canonical tables.        |
-| `npm start`, `npm run mcp` | Run the MCP server on stdio.                                            |
-| `npm run eval`             | Run the six benchmark questions through the server and report a score.  |
-| `npm test`                 | Unit tests (Vitest).                                                    |
-| `npm run test:integration` | Postgres integration tests in a throwaway Testcontainers database.      |
-| `npm run format`           | Format with Prettier.                                                   |
-| `npm run format:check`     | Check formatting.                                                       |
-| `npm run lint`             | ESLint with typescript-eslint.                                          |
-| `npm run typecheck`        | `tsc --noEmit`.                                                         |
-| `npm run scrub`            | Fail if any forbidden term appears in tracked files, branch or commits. |
-| `npm run check`            | format:check, lint, typecheck, test and scrub. Runs on `git push`.      |
+| Script                     | What it does                                                                             |
+| -------------------------- | ---------------------------------------------------------------------------------------- |
+| `npm run setup`            | Start Postgres, migrate, ingest.                                                         |
+| `npm run db:up`            | Start Postgres only and wait until healthy.                                              |
+| `npm run migrate`          | Apply pending SQL migrations from `migrations/`.                                         |
+| `npm run ingest`           | Migrate, then load the data pack and build the canonical tables.                         |
+| `npm start`, `npm run mcp` | Run the MCP server on stdio.                                                             |
+| `npm run eval`             | Run the six benchmark questions through the server and report a score.                   |
+| `npm test`                 | Unit tests (Vitest).                                                                     |
+| `npm run test:integration` | Postgres integration tests in a throwaway Testcontainers database.                       |
+| `npm run format`           | Format with Prettier.                                                                    |
+| `npm run format:check`     | Check formatting.                                                                        |
+| `npm run lint`             | ESLint with typescript-eslint.                                                           |
+| `npm run typecheck`        | `tsc --noEmit`.                                                                          |
+| `npm run scrub`            | Maintainer only: fail if any forbidden term appears in tracked files, branch or commits. |
+| `npm run check`            | format:check, lint, typecheck, test and scrub. Runs on `git push`.                       |
+
+`npm run check` runs format, lint, types, unit tests and a maintainer-only scrub check that is
+skipped (with a notice) when no terms file is present.
 
 ## How it fits together
 
@@ -158,6 +192,13 @@ units. Availability is computed per request by `src/availability/`. See
 
 Migrations are plain SQL files named `NNNN_name.sql` in `migrations/`, applied in order and
 recorded in `schema_migrations`. Never edit an applied migration; add a new one.
+
+## Adding a data source
+
+A new source is one adapter module, one registry entry and one `SourceSystem` name with its
+traits; no core module or migration changes. [`docs/adding-a-source.md`](docs/adding-a-source.md)
+lists the exact steps and files, the invariants an adapter keeps, the checks to run and a prompt
+to hand to a coding agent.
 
 ## Tests
 
