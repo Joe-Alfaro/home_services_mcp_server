@@ -10,7 +10,7 @@ export const TIME_ZONE = 'America/Chicago'
 
 const DEFAULT_DB_PORT = 5434
 const DEFAULT_TODAY = '2026-11-02'
-const DEFAULT_DATA_PACK_DIR = '_private/data_pack'
+const DEFAULT_DATA_PACK_DIR = 'data'
 const READER_ROLE = 'hsmcp_reader'
 // Local-only, set by migrations/0005_mcp_views.sql (like the compose superuser's password).
 const DEFAULT_READER_PASSWORD = 'hsmcp_reader'

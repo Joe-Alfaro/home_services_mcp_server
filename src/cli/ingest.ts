@@ -1,12 +1,16 @@
 import { existsSync } from 'node:fs'
+import path from 'node:path'
 import { ingestTimestamp, loadConfig } from '../config.ts'
 import { runPipeline } from '../ingest/pipeline.ts'
 import { formatSummary } from '../ingest/run.ts'
 
 // `npm run ingest` (and `npm run setup` after `docker compose up`): the whole pipeline (R22).
 const config = loadConfig()
-if (!existsSync(config.dataPackDir)) {
-  console.error(`ingest: data pack not found at ${config.dataPackDir} (set DATA_PACK_DIR)`)
+// data/ itself is tracked (empty), so look for the pack's sources/ folder, not just the directory.
+if (!existsSync(path.join(config.dataPackDir, 'sources'))) {
+  console.error(
+    `ingest: data pack not found at ${config.dataPackDir}: copy the pack into data/ (see data/README.md) or set DATA_PACK_DIR`,
+  )
   process.exit(1)
 }
 
