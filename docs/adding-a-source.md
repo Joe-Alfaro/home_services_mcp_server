@@ -13,6 +13,53 @@ the same change.
 The examples use a made-up source called `acme_crm`. Replace it with your source's name in
 `snake_case`.
 
+## Scaffold it
+
+`npm run new-source` does steps 1 to 5 below as a stub you then fill in:
+
+```sh
+npm run new-source -- acme_crm --role crm --format json --crm-pattern 'acme' --dry-run  # the plan
+npm run new-source -- acme_crm --role crm --format json --crm-pattern 'acme'
+```
+
+- `<name>` (required): the `snake_case` name, also the folder under `data/sources/`. It must match
+  `^[a-z][a-z0-9]*(_[a-z0-9]+)*$` and must not be a registered source.
+- `--role` (required): `crm`, `log`, `calendar`, `profile` or `other`; see step 2.
+- `--format`: `json` (default), `csv` or `ics`. It picks the fixture and the reader the stub starts
+  from.
+- `--crm-pattern <regex>`: `crm` only. The `declaredCrmPattern`, always case-insensitive. Without
+  it, the name with any separator (`/acme[ _-]?crm/i` for `acme_crm`). Other roles get `null`.
+- `--dry-run`: print the files it would create or edit and the traits entry, and write nothing.
+- `--skip-checks`: skip the type check and adapter tests it runs at the end.
+
+What it does:
+
+- Adds `'acme_crm'` to the end of the `SourceSystem` union, an entry at the end of
+  `SOURCE_TRAITS`, and `acmeCrmAdapter` (import and list entry) to the registry. These edits are
+  located through the TypeScript syntax tree (ts-morph) and only add lines.
+- Creates `src/adapters/acmeCrm.ts`: `patterns: ['sources/acme_crm/*/*.json']`, a `parse` that
+  reads each file through the `shared.ts` helpers (an `error` issue for an unreadable file) and
+  maps nothing yet, a TODO `mapRecord` stub that reports each record with an
+  `acme_crm.not_mapped` info issue, and the invariants below as comments.
+- Creates an invented fixture, `test/fixtures/acme_crm/sample_account/records.json` (`.csv` or
+  `.ics` for those formats).
+- Creates `test/unit/adapters/acmeCrm.test.ts`: passing contract checks (patterns, claimed
+  fixtures, empty batch for no files, no error issues, purity, no fixture PII in issue messages)
+  and one `it.fails('map your first record', ...)` that expects the first candidate of the role's
+  kind (a job for `crm` and `log`, a calendar block for `calendar`, a provider for `profile`, any
+  candidate for `other`).
+- Runs `npm run typecheck` and the new test with the registry contract test, then prints the next
+  steps and the [agent prompt](#prompt-for-a-coding-agent) with the names filled in. A run takes
+  a few seconds.
+
+It is safe to re-run: it refuses (nonzero exit, nothing written) an invalid or registered name, an
+unknown role or format, and any target file or fixture folder that already exists. It never edits
+an existing test, so `npm test` stays red until you update `registry.test.ts` (step 5).
+
+Then: update `registry.test.ts`, put the real files in `data/sources/acme_crm/`, adjust the
+pattern and fixtures to the real layout, write the mapping (the TODOs), drop the `.fails` marker on
+`map your first record`, and add tests per mapping. The steps below explain each piece.
+
 ## Steps
 
 ### 1. Name the source
@@ -206,6 +253,9 @@ You are adding a new data source, <name>, to this repository through the adapter
 docs/adding-a-source.md exactly, step by step.
 
 Rules:
+- If npm run new-source already scaffolded <name>, start from its TODOs: drop the .fails
+  marker on 'map your first record' in test/unit/adapters/<camelName>.test.ts and see it fail,
+  then write the mapping; replace the invented fixture with ones shaped like the real files.
 - Test-first: write test/unit/adapters/<camelName>.test.ts and invented fixtures under
   test/fixtures/<folder>/ first, run npm test and see them fail, then write the adapter.
 - Never edit other tests to make them pass. The only existing test you may change is
