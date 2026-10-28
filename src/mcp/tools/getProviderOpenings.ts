@@ -69,6 +69,7 @@ export async function getProviderOpenings(input: Input, options: ServerOptions) 
   )
   const found = availability.get(provider.id)
   return {
+    query: { today: options.today },
     providerId: provider.id,
     name: provider.name,
     window: { ...presentWindow(window), fromDate: input.from, toDateExclusive: input.to },

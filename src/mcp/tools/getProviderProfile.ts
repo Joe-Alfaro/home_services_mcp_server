@@ -15,7 +15,13 @@ import { ToolInputError } from '../errors.ts'
 import { mergeSources } from '../privacy.ts'
 import { respond } from '../result.ts'
 import { intField, textField } from '../schemas.ts'
-import { nextDaysWindow, presentOptional, windowInstants } from '../time.ts'
+import {
+  nextDaysWindow,
+  presentOptional,
+  presentWindow,
+  windowInstants,
+  SERVER_TODAY_NOTE,
+} from '../time.ts'
 
 const DESCRIPTION = `Everything known about one provider: trades, declared vs observed service area, job history counts across all their CRM accounts, the next openings, and profile-vs-data conflicts.
 
@@ -25,6 +31,8 @@ Do not use it to search providers by trade or zip (use find_providers instead), 
 
 Parameters: providerName (business name) or providerId (from another tool), openingsLimit (1-10 next openings, searched over the next 30 days), minMinutes (shortest opening to return, 0-720 minutes, default 30).
 History counts: completed = completed jobs and visits (estimates are counted separately, never as work).
+
+${SERVER_TODAY_NOTE}
 
 Example: {"providerName": "Lone Star Plumbing", "openingsLimit": 3}`
 
@@ -213,7 +221,7 @@ export async function getProviderProfile(input: Input, options: ServerOptions) {
   if ('candidates' in resolved) {
     return {
       ambiguous: true,
-      query: input.providerName,
+      query: { providerName: input.providerName, today: options.today },
       message:
         'Several businesses match this name. Call get_provider_profile again with the providerId you mean.',
       candidates: resolved.candidates.map((provider) => ({
@@ -243,6 +251,13 @@ export async function getProviderProfile(input: Input, options: ServerOptions) {
   const openings = presentOpenings(found, input.openingsLimit)
   const declared = provider.declaredZips ?? []
   return {
+    query: {
+      today: options.today,
+      ...(input.providerId === undefined ? {} : { providerId: input.providerId }),
+      ...(input.providerName === undefined ? {} : { providerName: input.providerName }),
+      // The window the next openings were searched in (R14).
+      window: presentWindow(window),
+    },
     providerId: provider.id,
     name: provider.name,
     aliases: provider.aliases.filter((alias) => alias !== provider.name),

@@ -1,6 +1,10 @@
 import { DateTime } from 'luxon'
 import { TIME_ZONE } from '../config.ts'
 
+/** Told to the agent in every relative-window tool description (R14, D-149). */
+export const SERVER_TODAY_NOTE =
+  "Windows are relative to the server's today (query.today in every response), not the caller's clock or date."
+
 /** Relative windows an agent may name (local dates, start inclusive, end exclusive). */
 export const WINDOWS = [
   'today',

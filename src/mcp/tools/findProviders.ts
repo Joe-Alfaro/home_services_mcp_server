@@ -6,7 +6,13 @@ import { loadJobs, loadProvidersByTrade, type Job, type Provider } from '../db.t
 import { mergeSources } from '../privacy.ts'
 import { respond } from '../result.ts'
 import { intField, tradeField, windowField, zipField } from '../schemas.ts'
-import { presentWindow, relativeWindow, windowInstants, WINDOWS } from '../time.ts'
+import {
+  presentWindow,
+  relativeWindow,
+  windowInstants,
+  WINDOWS,
+  SERVER_TODAY_NOTE,
+} from '../time.ts'
 
 const DESCRIPTION = `Find providers of one trade, optionally filtered by where they have worked or serve, and list their open time slots in a relative window.
 
@@ -15,6 +21,8 @@ Use when the question is "which <trade> providers have done work in zip X" or "w
 Do not use it to compare or recommend providers for a specific job (use rank_providers_for_job instead), for one known provider's details (use get_provider_profile), or for a custom date range (use get_provider_openings with a providerId from here).
 
 Parameters: trade (enum), workedInZip and nearZip (5-digit strings), minOpeningMinutes (15-720), window (${WINDOWS.join(' | ')}), openingsLimit (1-20).
+
+${SERVER_TODAY_NOTE}
 
 Example: {"trade": "handyman", "workedInZip": "75214", "minOpeningMinutes": 120, "window": "next_3_days"}`
 
@@ -172,6 +180,7 @@ export async function findProviders(input: Input, options: ServerOptions) {
 
   return {
     query: {
+      today: options.today,
       trade: input.trade,
       ...(input.workedInZip === undefined ? {} : { workedInZip: input.workedInZip }),
       ...(input.nearZip === undefined ? {} : { nearZip: input.nearZip }),
