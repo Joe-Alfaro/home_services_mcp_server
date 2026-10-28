@@ -22,7 +22,6 @@ const FORMATS = ['json', 'csv', 'ics'] as const
 const NAME = /^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$/
 const TYPES_FILE = 'src/adapters/types.ts'
 const REGISTRY_FILE = 'src/adapters/registry.ts'
-const REGISTRY_TEST = 'test/unit/adapters/registry.test.ts'
 const GUIDE = 'docs/adding-a-source.md'
 
 type Role = (typeof ROLES)[number]
@@ -701,16 +700,15 @@ function nextSteps(options: Options, fixturePath: string): string {
   const { name, camelName } = options
   const prompt = agentPrompt(options)
   return `Next steps:
-  1. Update ${REGISTRY_TEST} (this script never edits tests): add '${name}' to
-     ALL_SYSTEMS, ${camelName}Adapter to the arrayContaining list, and raise toHaveLength by one.
-     npm test stays red until you do.
-  2. Put the real files in data/sources/${name}/ (git-ignored; or $DATA_PACK_DIR/sources/${name}/)
+  No existing test needs an edit: they read the systems from SOURCE_TRAITS, so npm test passes now
+  (the new 'map your first record' test is an expected failure until you map a record).
+  1. Put the real files in data/sources/${name}/ (git-ignored; or $DATA_PACK_DIR/sources/${name}/)
      and adjust the pattern in src/adapters/${camelName}.ts to their layout.
-  3. Replace ${fixturePath}
+  2. Replace ${fixturePath}
      with small invented fixtures that mimic the real shape.
-  4. Write the mapping (the TODOs in src/adapters/${camelName}.ts), then drop the .fails marker on
+  3. Write the mapping (the TODOs in src/adapters/${camelName}.ts), then drop the .fails marker on
      'map your first record' in test/unit/adapters/${camelName}.test.ts and add tests per mapping.
-  5. Run npm run check, npm run ingest (0 errors, 0 unmapped statuses, no unclaimed files) and
+  4. Run npm run check, npm run ingest (0 errors, 0 unmapped statuses, no unclaimed files) and
      npm run eval (6/6).
 ${
   prompt === null

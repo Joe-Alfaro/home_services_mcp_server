@@ -9,8 +9,8 @@
  * - Scope: src/normalize, src/resolve, src/ingest, src/availability, src/db and src/mcp. The task
  *   brief adds src/ingest and src/db to the grep's four directories; src/ingest/pipeline.ts may
  *   import the registry list (that is the registration wiring R2 asks for).
- * - Every registered source system counts ('spreadsheet', 'ics' and 'profiles' too, not just the
- *   three CRMs), taken from the registry so a new source is covered automatically.
+ * - Every source system counts ('spreadsheet', 'ics' and 'profiles' too, not just the three CRMs),
+ *   taken from the SOURCE_TRAITS keys so a new source is covered automatically.
  * - Any source-system string literal in a value position is a hit: `===`/`!==` comparisons, `case`
  *   labels, Sets, tuples, `.includes()` arguments, and a quoted system inside SQL text. Comparing
  *   through a lookup set is the same branch as comparing directly.
@@ -27,11 +27,14 @@ import path from 'node:path'
 import ts from 'typescript'
 import { describe, expect, it } from 'vitest'
 import { adapters } from '../../../src/adapters/registry.ts'
+import { SOURCE_TRAITS } from '../../../src/adapters/types.ts'
 import { REPO_ROOT } from '../../../src/config.ts'
 
 const SRC = path.join(REPO_ROOT, 'src')
 const CORE_DIRS = ['normalize', 'resolve', 'ingest', 'availability', 'db', 'mcp'] as const
-const SOURCE_SYSTEMS: readonly string[] = adapters.map((adapter) => adapter.sourceSystem)
+const SOURCE_SYSTEMS: readonly string[] = Object.keys(SOURCE_TRAITS)
+/** The six sources this rule was first written for; the scan must never drop one of them. */
+const ORIGINAL_SYSTEMS = ['housecall_pro', 'ics', 'jobber', 'profiles', 'spreadsheet', 'workiz']
 
 /** The only adapter modules a core module may import, and who may import them. */
 const ALLOWED_ADAPTER_IMPORTS: Readonly<Record<string, (importer: string) => boolean>> = {
@@ -145,10 +148,13 @@ describe('R2(b): the branch detector', () => {
 })
 
 describe('R2(b): core modules never name a specific source system', () => {
-  it('R2(b): the registry lists the six source systems the scan looks for', () => {
-    expect([...SOURCE_SYSTEMS].sort()).toEqual(
-      ['housecall_pro', 'ics', 'jobber', 'profiles', 'spreadsheet', 'workiz'].sort(),
-    )
+  it('R2(b): the scan looks for every SOURCE_TRAITS key, including the six original systems', () => {
+    expect(SOURCE_SYSTEMS).toEqual(expect.arrayContaining(ORIGINAL_SYSTEMS))
+  })
+
+  it('R2(b): every registered adapter is a system the scan looks for', () => {
+    const registered = adapters.map((adapter) => adapter.sourceSystem)
+    expect(SOURCE_SYSTEMS).toEqual(expect.arrayContaining(registered))
   })
 
   it.each(CORE_DIRS)('R2(b): src/%s has no branch on a source-system literal', (dir) => {

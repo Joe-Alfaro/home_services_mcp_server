@@ -14,6 +14,7 @@ import {
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { SOURCE_TRAITS } from '../../../src/adapters/types.ts'
 
 // Black-box tests for `npm run new-source -- <name> --role <role> [--format json|csv|ics]
 // [--crm-pattern <regex>] [--dry-run]`. Each case copies the repo (no .git, no data pack, no
@@ -27,7 +28,8 @@ const SKIP_TOP = new Set(['.git', 'node_modules', 'data', '_private', 'coverage'
 /** The tracked placeholders of data/, copied so the copy matches a fresh clone. */
 const DATA_PLACEHOLDERS = ['.gitkeep', 'README.md']
 const ROLES = ['crm', 'log', 'calendar', 'profile', 'other'] as const
-const EXISTING_SYSTEMS = ['jobber', 'housecall_pro', 'workiz', 'spreadsheet', 'ics', 'profiles']
+/** The systems registered before the run, in order; read live so adding a source needs no edit here. */
+const EXISTING_SYSTEMS = Object.keys(SOURCE_TRAITS)
 const BATCH_KEYS = ['calendarBlocks', 'declaredHours', 'issues', 'jobs', 'properties', 'providers']
 
 interface RunResult {
@@ -384,7 +386,7 @@ describe('npm run new-source', () => {
 
     it('registers the adapter with a crm traits entry appended last', () => {
       const info = probe(copy, name)
-      expect(info.systems).toHaveLength(7)
+      expect(info.systems).toHaveLength(EXISTING_SYSTEMS.length + 1)
       expect(info.systems).toContain(name)
       expect(info.traitKeys).toEqual([...EXISTING_SYSTEMS, name])
       expect(info.traits?.role).toBe('crm')
@@ -485,7 +487,9 @@ describe('npm run new-source', () => {
       const stdout = result.stdout.replaceAll('\r\n', '\n')
       expect(stdout).toContain(filledPrompt(copy, name))
       expect(stdout).not.toMatch(/<(name|camelName|folder)>/)
-      expect(stdout).toContain('test/unit/adapters/registry.test.ts')
+      // Existing tests read the systems from SOURCE_TRAITS, so no step asks for a hand edit.
+      expect(stdout).not.toContain('registry.test.ts')
+      expect(stdout).not.toMatch(/stays red/i)
       expect(stdout).toContain('data/sources/acme_crm/')
     })
 

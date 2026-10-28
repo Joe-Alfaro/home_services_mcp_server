@@ -54,9 +54,11 @@ What it does:
 
 It is safe to re-run: it refuses (nonzero exit, nothing written) an invalid or registered name, an
 unknown role or format, and any target file or fixture folder that already exists. It never edits
-an existing test, so `npm test` stays red until you update `registry.test.ts` (step 5).
+an existing test, and none needs editing: the existing tests read the systems from `SOURCE_TRAITS`
+(see step 5), so `npm test` passes straight after the scaffold, with `map your first record`
+reported as the one expected failure.
 
-Then: update `registry.test.ts`, put the real files in `data/sources/acme_crm/`, adjust the
+Then: put the real files in `data/sources/acme_crm/`, adjust the
 pattern and fixtures to the real layout, write the mapping (the TODOs), drop the `.fails` marker on
 `map your first record`, and add tests per mapping. The steps below explain each piece.
 
@@ -173,14 +175,15 @@ export const adapters: readonly SourceAdapter[] = [
   iterates the registry, so it checks the new adapter with no edits: exactly one registered
   adapter per `SourceSystem` member (read from the `SOURCE_TRAITS` keys), a `SOURCE_TRAITS` entry
   for each, and an empty, contract-shaped batch (only `info` issues) for no files.
-- [`test/unit/adapters/registry.test.ts`](../test/unit/adapters/registry.test.ts) still pins the
-  list of systems by hand. Add `'acme_crm'` to `ALL_SYSTEMS`, change `toHaveLength(6)` to `7`, and
-  add `acmeCrmAdapter` to the `arrayContaining` list. Its per-system checks (patterns under
-  `sources/`, an empty batch for no files) then cover the new adapter. This is the only existing
-  test you edit.
-- [`test/unit/architecture/r2-no-source-branching.test.ts`](../test/unit/architecture/r2-no-source-branching.test.ts)
-  reads the systems from the registry, so it checks the new name automatically: core code must not
-  compare against `'acme_crm'` anywhere.
+- No existing test needs a hand edit. These read the systems from the `SOURCE_TRAITS` keys and
+  pick up the new one automatically:
+  - [`test/unit/adapters/registry.test.ts`](../test/unit/adapters/registry.test.ts): exactly one
+    registered adapter per system, patterns under `sources/` and an empty batch for no files for
+    each, and the six original systems still present.
+  - [`test/unit/architecture/r2-no-source-branching.test.ts`](../test/unit/architecture/r2-no-source-branching.test.ts):
+    core code must not compare against `'acme_crm'` anywhere outside `src/adapters/`.
+  - [`test/unit/scripts/new-source.test.ts`](../test/unit/scripts/new-source.test.ts): the
+    scaffold appends one system to whatever is already registered.
 
 ### 6. Put the real files in place
 
@@ -239,7 +242,7 @@ npm run ingest           # with the real files in data/sources/acme_crm/
 npm run eval             # the six benchmark questions
 ```
 
-- `npm test` passes, including your new test file and the updated registry test.
+- `npm test` passes, including your new test file, with no edits to existing tests.
 - `npm run ingest` prints an `acme_crm: N files read` block, `unclaimed files: none`, and a
   `total:` line with `0 errors` and `0 unmapped statuses`.
 - `npm run eval` still reports 6/6.
@@ -258,9 +261,8 @@ Rules:
   then write the mapping; replace the invented fixture with ones shaped like the real files.
 - Test-first: write test/unit/adapters/<camelName>.test.ts and invented fixtures under
   test/fixtures/<folder>/ first, run npm test and see them fail, then write the adapter.
-- Never edit other tests to make them pass. The only existing test you may change is
-  test/unit/adapters/registry.test.ts: add the new system to ALL_SYSTEMS, the adapter to the
-  arrayContaining list, and raise the count by one.
+- Never edit existing tests. They read the systems from SOURCE_TRAITS, so none needs a change
+  for a new source; if one fails, stop and say why.
 - No real data in fixtures, docs or commit messages: invented names, 555-01xx phones,
   example.com emails and made-up addresses only. Real files go in data/sources/<folder>/, which
   is git-ignored.

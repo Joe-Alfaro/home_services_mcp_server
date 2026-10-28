@@ -5,11 +5,14 @@ import { jobberAdapter } from '../../../src/adapters/jobber.ts'
 import { profilesAdapter } from '../../../src/adapters/profiles.ts'
 import { adapters } from '../../../src/adapters/registry.ts'
 import { spreadsheetAdapter } from '../../../src/adapters/spreadsheet.ts'
-import type { SourceSystem } from '../../../src/adapters/types.ts'
+import { SOURCE_TRAITS, type SourceSystem } from '../../../src/adapters/types.ts'
 import { workizAdapter } from '../../../src/adapters/workiz.ts'
 import { makeCtx } from './support.ts'
 
-const ALL_SYSTEMS: readonly SourceSystem[] = [
+// Read live from SOURCE_TRAITS (whose keys the compiler ties to the SourceSystem union), so adding a
+// source needs no edit here; the six original systems stay pinned below.
+const ALL_SYSTEMS = Object.keys(SOURCE_TRAITS) as SourceSystem[]
+const ORIGINAL_SYSTEMS: readonly SourceSystem[] = [
   'jobber',
   'housecall_pro',
   'workiz',
@@ -20,9 +23,13 @@ const ALL_SYSTEMS: readonly SourceSystem[] = [
 
 // R2: one adapter per source behind one contract, registered in one list.
 describe('adapter registry', () => {
-  it('registers exactly six adapters, one per source system', () => {
-    expect(adapters).toHaveLength(6)
+  it('registers exactly one adapter per source system', () => {
+    expect(adapters).toHaveLength(ALL_SYSTEMS.length)
     expect(adapters.map((adapter) => adapter.sourceSystem).sort()).toEqual([...ALL_SYSTEMS].sort())
+  })
+
+  it('still lists the six original source systems', () => {
+    expect(ALL_SYSTEMS).toEqual(expect.arrayContaining([...ORIGINAL_SYSTEMS]))
   })
 
   it('registers the adapter modules themselves', () => {
