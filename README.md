@@ -198,6 +198,7 @@ per question and the pass rate. It exits 1 when any question fails. Run `npm run
 | `npm run typecheck`        | `tsc --noEmit`.                                                                          |
 | `npm run scrub`            | Maintainer only: fail if any forbidden term appears in tracked files, branch or commits. |
 | `npm run check`            | format:check, lint, typecheck, test and scrub. Runs on `git push`.                       |
+| `npm run new-source`       | Scaffold a new data source (see [Adding a data source](#adding-a-data-source)).          |
 
 `npm run check` runs format, lint, types, unit tests and a maintainer-only scrub check that is
 skipped (with a notice) when no terms file is present.
@@ -221,9 +222,30 @@ recorded in `schema_migrations`. Never edit an applied migration; add a new one.
 ## Adding a data source
 
 A new source is one adapter module, one registry entry and one `SourceSystem` name with its
-traits; no core module or migration changes. [`docs/adding-a-source.md`](docs/adding-a-source.md)
-lists the exact steps and files, the invariants an adapter keeps, the checks to run and a prompt
-to hand to a coding agent.
+traits; no core module or migration changes. Scaffold it with one command:
+
+```sh
+npm run new-source -- acme_crm --role crm --format json --crm-pattern 'acme'
+```
+
+| Flag                    | Meaning                                                                                  |
+| ----------------------- | ---------------------------------------------------------------------------------------- |
+| `<name>`                | The `snake_case` source name, also its folder under `data/sources/`. Must be new.        |
+| `--role <role>`         | Required: `crm`, `log`, `calendar`, `profile` or `other` (its `SOURCE_TRAITS` role).     |
+| `--format <format>`     | `json` (default), `csv` or `ics`: the fixture and reader the stub starts from.           |
+| `--crm-pattern <regex>` | `crm` only: matches a profile's "CRM we use" text (case-insensitive). Default: the name. |
+| `--dry-run`             | Print the planned files and the traits entry; write nothing.                             |
+| `--skip-checks`         | Don't run the type check and adapter tests afterwards.                                   |
+
+It creates `src/adapters/<camelName>.ts` (a stub that reads the files and maps nothing yet),
+`test/unit/adapters/<camelName>.test.ts` (passing contract checks plus one expected failure,
+`map your first record`) and an invented fixture under `test/fixtures/<name>/`, and adds the name
+to the `SourceSystem` union, `SOURCE_TRAITS` and the registry. It refuses a registered name or any
+existing file, never edits a test, then runs the type check and the adapter tests and prints the
+next steps with a filled-in prompt for a coding agent. One run takes a few seconds.
+
+[`docs/adding-a-source.md`](docs/adding-a-source.md) lists the exact steps and files, the
+invariants an adapter keeps, the checks to run and the agent prompt.
 
 ## Teardown
 
