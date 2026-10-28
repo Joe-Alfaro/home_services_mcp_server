@@ -175,8 +175,8 @@ export const adapters: readonly SourceAdapter[] = [
   iterates the registry, so it checks the new adapter with no edits: exactly one registered
   adapter per `SourceSystem` member (read from the `SOURCE_TRAITS` keys), a `SOURCE_TRAITS` entry
   for each, and an empty, contract-shaped batch (only `info` issues) for no files.
-- No existing test needs a hand edit. These read the systems from the `SOURCE_TRAITS` keys and
-  pick up the new one automatically:
+- No existing test needs a hand edit. These read the systems from the `SOURCE_TRAITS` keys or the
+  registry and pick up the new one automatically:
   - [`test/unit/adapters/registry.test.ts`](../test/unit/adapters/registry.test.ts): exactly one
     registered adapter per system, patterns under `sources/` and an empty batch for no files for
     each, and the six original systems still present.
@@ -184,6 +184,10 @@ export const adapters: readonly SourceAdapter[] = [
     core code must not compare against `'acme_crm'` anywhere outside `src/adapters/`.
   - [`test/unit/scripts/new-source.test.ts`](../test/unit/scripts/new-source.test.ts): the
     scaffold appends one system to whatever is already registered.
+  - [`test/integration/ingest.test.ts`](../test/integration/ingest.test.ts), run by
+    `npm run test:integration`: loads `test/fixtures/<folder>/` for each adapter's
+    `sources/<folder>/` pattern and expects records from every registered source, so name the
+    fixture folder after the pattern folder (the scaffold does).
 
 ### 6. Put the real files in place
 

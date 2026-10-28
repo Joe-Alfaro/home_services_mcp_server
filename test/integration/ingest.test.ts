@@ -9,7 +9,14 @@ import { claimedBy } from '../../src/ingest/files.ts'
 import { runAdapters, summarize } from '../../src/ingest/run.ts'
 import { loadFixtureFiles, makeCtx } from '../unit/adapters/support.ts'
 
-const FIXTURE_DIRS = ['jobber', 'housecall_pro', 'workiz', 'spreadsheet', 'calendars', 'profiles']
+// Each adapter claims sources/<folder>/... and its fixtures live in test/fixtures/<folder>/, so the
+// folders come from the registry and a new source is loaded with no edit here.
+const FIXTURE_DIRS = [
+  ...new Set(
+    adapters.flatMap((adapter) => adapter.patterns.map((pattern) => pattern.split('/')[1])),
+  ),
+].filter((dir): dir is string => dir !== undefined)
+const ORIGINAL_DIRS = ['jobber', 'housecall_pro', 'workiz', 'spreadsheet', 'calendars', 'profiles']
 
 // The loader writes every candidate and issue with provenance, and a re-run replaces the last.
 describe('ingest loader', () => {
@@ -44,12 +51,17 @@ describe('ingest loader', () => {
     await container.stop()
   })
 
+  it('loads the fixture folder of every registered source, including the six original ones', () => {
+    expect(FIXTURE_DIRS).toEqual(expect.arrayContaining(ORIGINAL_DIRS))
+    expect(FIXTURE_DIRS).toHaveLength(adapters.length)
+  })
+
   it('claims every fixture file with exactly one adapter', () => {
     const all = [...claimed.values()].flat()
     expect(all.sort()).toEqual([...paths].sort())
   })
 
-  it('stores every candidate with provenance from all six sources', async () => {
+  it('stores every candidate with provenance from every registered source', async () => {
     const { results, summary } = ingestOnce()
     await writeIngest(client, ctx, results, summary)
 

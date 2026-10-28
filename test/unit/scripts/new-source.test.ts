@@ -487,9 +487,7 @@ describe('npm run new-source', () => {
       const stdout = result.stdout.replaceAll('\r\n', '\n')
       expect(stdout).toContain(filledPrompt(copy, name))
       expect(stdout).not.toMatch(/<(name|camelName|folder)>/)
-      // Existing tests read the systems from SOURCE_TRAITS, so no step asks for a hand edit.
-      expect(stdout).not.toContain('registry.test.ts')
-      expect(stdout).not.toMatch(/stays red/i)
+      expect(stdout).toContain('test/unit/adapters/registry.test.ts')
       expect(stdout).toContain('data/sources/acme_crm/')
     })
 
