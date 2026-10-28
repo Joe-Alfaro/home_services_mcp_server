@@ -66,9 +66,10 @@ job made from it: one service, 1.0. A calendar event mirroring a job within 30 m
 - **Capacity:** concurrent bookings < min(declared crew, most ever observed at once), minimum 1.
 
 Confidence starts `high` and only drops, with a reason. `low`: inferred hours, or a tentative
-hold, limbo or unscheduled item that day. `medium`: an opening that
-exists only because a second crew lane is free, a declared crew larger than observed concurrency,
-work outside declared hours, or a CSV-only booking. Anything any source calls busy blocks.
+hold, limbo, unscheduled or CSV-only booking that day (a CSV row a calendar event mirrors takes
+that event's confidence instead). `medium`: an opening that exists only because a second crew lane
+is free, a declared crew larger than observed concurrency, or work outside declared hours. Anything
+any source calls busy blocks.
 
 ## Privacy
 
