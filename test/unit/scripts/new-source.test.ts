@@ -485,10 +485,16 @@ describe('npm run new-source', () => {
 
     it('prints next steps with the filled-in agent prompt', () => {
       const stdout = result.stdout.replaceAll('\r\n', '\n')
-      expect(stdout).toContain(filledPrompt(copy, name))
+      const prompt = filledPrompt(copy, name)
+      expect(stdout).toContain(prompt)
       expect(stdout).not.toMatch(/<(name|camelName|folder)>/)
-      expect(stdout).toContain('test/unit/adapters/registry.test.ts')
       expect(stdout).toContain('data/sources/acme_crm/')
+      // Existing tests read the systems from SOURCE_TRAITS, so the steps ask for no hand edit.
+      const steps = stdout.slice(0, stdout.indexOf(prompt))
+      expect(steps).toMatch(/no existing test needs a hand edit/i)
+      expect(steps).not.toContain('registry.test.ts')
+      expect(steps).not.toMatch(/(update|edit|change) test\//i)
+      expect(steps).not.toMatch(/stays red/i)
     })
 
     it('refuses to run again with the same name, changing nothing', () => {
